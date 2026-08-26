@@ -1276,7 +1276,10 @@ export default function Home() {
                 <h2>{t.popular}</h2>
                 <p>{t.popularSub}</p>
               </div>
-              <button className="text-action desktop-only" onClick={scrollPopularCrops}>{t.viewMore} <ChevronRight size={17} /></button>
+              <button className="text-action desktop-only" onClick={scrollPopularCrops}>
+                <span>{t.viewMore}</span>
+                <ChevronRight size={17} style={{ flexShrink: 0 }} />
+              </button>
             </div>
             <div
               className={`crop-stamps${showAll ? " show-all" : ""}`}
@@ -1294,7 +1297,10 @@ export default function Home() {
                 </button>
               ))}
             </div>
-            <button className="text-action mobile-only view-more" onClick={() => setShowAll(!showAll)}>{showAll ? t.viewLess : t.viewMore} <ChevronRight size={17} /></button>
+            <button className="text-action mobile-only view-more" onClick={() => setShowAll(!showAll)}>
+              <span>{showAll ? t.viewLess : t.viewMore}</span>
+              <ChevronRight size={17} style={{ flexShrink: 0 }} />
+            </button>
           </section>
 
           <section className="content-section" style={{ paddingTop: 30, paddingBottom: 50 }}>

@@ -135,6 +135,37 @@ button.market-row { width: 100%; border: 0; border-bottom: 1px solid #dce8df; ba
   }
 }
 
+.text-action {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  border-bottom: 1.5px solid #1f6b45 !important;
+  padding: 0 0 2px !important;
+  background: transparent !important;
+  color: #1f6b45 !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  line-height: 1 !important;
+}
+.text-action svg {
+  display: inline-block !important;
+  flex-shrink: 0 !important;
+  vertical-align: middle !important;
+  margin: 0 !important;
+}
+.view-more {
+  margin-top: 18px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+}
+
 /* ==========================================================================
    MARKET TERMINAL & DECISION SUPPORT STYLES
    ========================================================================== */
