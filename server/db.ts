@@ -23,6 +23,20 @@ const DEFAULT_SUPABASE_DIRECT_URL =
 let _pool: pg.Pool | null = null;
 let _db: ReturnType<typeof drizzle> | null = null;
 
+function safeParseArray(val: any, fallback: string[] = []): string[] {
+  if (!val) return fallback;
+  if (Array.isArray(val)) return val;
+  if (typeof val === "string") {
+    try {
+      const parsed = JSON.parse(val);
+      return Array.isArray(parsed) ? parsed : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+  return fallback;
+}
+
 export async function getDb() {
   if (!_db) {
     const connStr =
@@ -36,6 +50,9 @@ export async function getDb() {
         max: 10,
         idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 7000,
+      });
+      _pool.on("error", (err) => {
+        console.warn("[Database Pool Unexpected Error]:", err);
       });
       _db = drizzle(_pool);
     } catch (error) {
@@ -332,8 +349,8 @@ export async function registerOrLoginPasswordless(input: {
     role: role,
     location: location,
     language: language,
-    recentCrops: JSON.parse(memoryRecord.recentCrops || "[]"),
-    watchlist: JSON.parse(memoryRecord.watchlist || "[]"),
+    recentCrops: safeParseArray(memoryRecord.recentCrops, ["Tomato", "Chilli"]),
+    watchlist: safeParseArray(memoryRecord.watchlist, ["tomato"]),
     createdAt: now,
     updatedAt: now,
     lastSignedIn: now,
