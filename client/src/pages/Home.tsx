@@ -419,6 +419,7 @@ export default function Home() {
   const [selectedMarket, setSelectedMarket] = useState("");
 
   const authAuthenticate = trpc.auth.authenticatePasswordless.useMutation();
+  const authLogin = trpc.auth.login.useMutation();
   const authLogout = trpc.auth.logout.useMutation();
   const farmerLookup = trpc.farmer.lookup.useMutation();
   const farmerSave = trpc.farmer.save.useMutation();
@@ -856,63 +857,60 @@ export default function Home() {
       return;
     }
 
-    farmerLookup.mutate(
-      { mobile: cleanMobile },
+    authLogin.mutate(
+      { emailOrMobile: cleanMobile, role: authRole },
       {
-        onSuccess: (found) => {
-          if (found) {
-            authAuthenticate.mutate(
-              {
-                fullName: found.fullName,
-                mobile: cleanMobile,
-                location: found.location,
-                language: (found.language as LanguageKey) || language,
-                role: ((found as any).accountRole as any) || authRole,
-              },
-              {
-                onSuccess: (res) => {
-                  if (res.user) {
-                    const profile: FarmerProfile = {
-                      id: res.user.id,
-                      fullName: res.user.name,
-                      mobile: res.user.mobile,
-                      location: res.user.location,
-                      language: (res.user.language as LanguageKey) || language,
-                      createdAt: new Date(),
-                      updatedAt: new Date(),
-                    };
-                    applyFarmer(profile, (res.user.role as any) || authRole);
-                    setAuthOpen(false);
-                    openRoleDashboard((res.user.role as any) || authRole);
-                    toast.success(`Welcome back, ${res.user.name}!`);
-                  }
-                },
-                onError: () => {
-                  const profile: FarmerProfile = {
-                    fullName: found.fullName,
-                    mobile: cleanMobile,
-                    location: found.location,
-                    language: (found.language as LanguageKey) || language,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                  };
-                  applyFarmer(profile, authRole);
+        onSuccess: (res) => {
+          if (res.found && res.profile) {
+            const profile: FarmerProfile = {
+              id: res.profile.id || res.user?.id,
+              fullName: res.profile.fullName,
+              mobile: res.profile.mobile,
+              location: res.profile.location,
+              language: (res.profile.language as LanguageKey) || language,
+              accountRole: res.profile.accountRole || authRole,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            };
+            applyFarmer(profile, (res.profile.accountRole as any) || authRole);
+            setAuthOpen(false);
+            openRoleDashboard((res.profile.accountRole as any) || authRole);
+            toast.success(`Welcome back, ${res.profile.fullName}!`);
+          } else {
+            // Check local profile cache
+            const raw = localStorage.getItem("cropcast-farmer-profile") || localStorage.getItem("agrimarket-farmer-profile");
+            if (raw) {
+              try {
+                const parsed = JSON.parse(raw);
+                if (parsed?.mobile === cleanMobile) {
+                  applyFarmer(parsed, authRole);
                   setAuthOpen(false);
                   openRoleDashboard(authRole);
-                  toast.success(`Welcome back, ${found.fullName}!`);
-                },
-              }
-            );
-          } else {
-            // New user: prefill phone into signup and switch tabs
+                  toast.success(`Welcome back, ${parsed.fullName}!`);
+                  return;
+                }
+              } catch {}
+            }
             setSignUpForm((prev) => ({ ...prev, mobile: cleanMobile }));
             setAuthTab("signup");
-            toast.message("New mobile number. Please enter your name to complete registration.");
+            toast.message("New mobile number. Please enter your name to create your account.");
           }
         },
-        onError: () => {
-          setSignUpForm((prev) => ({ ...prev, mobile: cleanMobile }));
-          setAuthTab("signup");
+        onError: (err) => {
+          const raw = localStorage.getItem("cropcast-farmer-profile") || localStorage.getItem("agrimarket-farmer-profile");
+          if (raw) {
+            try {
+              const parsed = JSON.parse(raw);
+              if (parsed?.mobile === cleanMobile) {
+                applyFarmer(parsed, authRole);
+                setAuthOpen(false);
+                openRoleDashboard(authRole);
+                toast.success(`Welcome back, ${parsed.fullName}!`);
+                return;
+              }
+            } catch {}
+          }
+          setAuthServerErr(err.message || "Failed to sign in. Please try again.");
         },
       }
     );

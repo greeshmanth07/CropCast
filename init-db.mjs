@@ -1,4 +1,4 @@
-﻿import pg from 'pg';
+import pg from 'pg';
 const { Client } = pg;
 const client = new Client({
   connectionString: 'postgresql://postgres.akfpuhvlsafpafivwxnr:Kingofstates1119@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres',
@@ -97,6 +97,17 @@ async function init() {
     `);
 
     console.log('SUCCESS: All Supabase tables created successfully!');
+
+    // Seed Admin Gani into Supabase
+    await client.query(`
+      INSERT INTO "farmerProfiles" (mobile, "fullName", location, language, "accountRole")
+      VALUES ('9908065800', 'Gani', 'Guntur, Andhra Pradesh', 'English', 'admin')
+      ON CONFLICT (mobile) DO UPDATE
+      SET "fullName" = EXCLUDED."fullName", location = EXCLUDED.location, "accountRole" = 'admin', "updatedAt" = NOW();
+    `);
+
+    const result = await client.query('SELECT mobile, "fullName", location, "accountRole" FROM "farmerProfiles"');
+    console.log('Current live profiles in Supabase cloud:', result.rows);
     await client.end();
   } catch (err) {
     console.error('Error creating tables:', err);

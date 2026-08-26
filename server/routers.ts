@@ -129,41 +129,39 @@ export const appRouter = router({
         }
       }),
 
-    // Legacy / simple login by mobile or email
+    // Simple login by mobile number
     login: publicProcedure
       .input(
         z.object({
-          emailOrMobile: z.string().trim().min(1, "Phone number or email is required."),
-          password: z.string().optional(),
+          emailOrMobile: z.string().trim().min(1, "Phone number is required."),
           role: z.enum(["farmer", "buyer", "admin"]).optional(),
         })
       )
       .mutation(async ({ input, ctx }) => {
         try {
           const digits = input.emailOrMobile.replace(/\D/g, "").slice(-10);
-          if (digits.length === 10) {
-            const existing = await lookupFarmerByMobile(digits);
-            if (existing) {
-              const { user, profile, sessionId } = await registerOrLoginPasswordless({
-                fullName: existing.fullName,
-                mobile: digits,
-                location: existing.location,
-                language: existing.language,
-                role: (existing.accountRole as any) || input.role || "farmer",
-              });
-              safeSetCookie(ctx.res, ctx.req, COOKIE_NAME, sessionId, ONE_YEAR_MS);
-              return { success: true, user, profile };
-            }
+          if (!/^\d{10}$/.test(digits)) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Please enter a valid 10-digit Indian mobile number.",
+            });
           }
 
-          const { user, profile, sessionId } = await registerOrLoginPasswordless({
-            fullName: "Farmer",
-            mobile: digits.length === 10 ? digits : "9876543210",
-            location: "Guntur, Andhra Pradesh",
-            role: input.role || "farmer",
-          });
-          safeSetCookie(ctx.res, ctx.req, COOKIE_NAME, sessionId, ONE_YEAR_MS);
-          return { success: true, user, profile };
+          const existing = await lookupFarmerByMobile(digits);
+          if (existing) {
+            const role = (existing.accountRole as any) || input.role || "farmer";
+            const { user, profile, sessionId } = await registerOrLoginPasswordless({
+              fullName: existing.fullName,
+              mobile: digits,
+              location: existing.location,
+              language: existing.language,
+              role,
+            });
+            safeSetCookie(ctx.res, ctx.req, COOKIE_NAME, sessionId, ONE_YEAR_MS);
+            return { success: true, found: true, user, profile };
+          }
+
+          return { success: true, found: false, user: null, profile: null };
         } catch (err: any) {
           throw new TRPCError({
             code: "UNAUTHORIZED",
