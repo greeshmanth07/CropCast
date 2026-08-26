@@ -65,6 +65,38 @@ const requirementInputSchema = z.object({
   maxPricePerKg: z.number().int().positive().max(100000),
 });
 
+function safeSetCookie(res: any, req: any, name: string, value: string, maxAge: number) {
+  try {
+    const cookieOptions = getSessionCookieOptions(req);
+    if (typeof res?.cookie === "function") {
+      res.cookie(name, value, { ...cookieOptions, maxAge });
+    } else if (typeof res?.setHeader === "function") {
+      res.setHeader(
+        "Set-Cookie",
+        `${name}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${Math.floor(maxAge / 1000)}`
+      );
+    }
+  } catch (err) {
+    console.warn("[Auth] Cookie set skipped:", err);
+  }
+}
+
+function safeClearCookie(res: any, req: any, name: string) {
+  try {
+    const cookieOptions = getSessionCookieOptions(req);
+    if (typeof res?.clearCookie === "function") {
+      res.clearCookie(name, { ...cookieOptions, maxAge: -1 });
+    } else if (typeof res?.setHeader === "function") {
+      res.setHeader(
+        "Set-Cookie",
+        `${name}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT`
+      );
+    }
+  } catch (err) {
+    console.warn("[Auth] Cookie clear skipped:", err);
+  }
+}
+
 export const appRouter = router({
   system: systemRouter,
 
@@ -82,8 +114,7 @@ export const appRouter = router({
             role: input.role,
           });
 
-          const cookieOptions = getSessionCookieOptions(ctx.req);
-          ctx.res.cookie(COOKIE_NAME, sessionId, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+          safeSetCookie(ctx.res, ctx.req, COOKIE_NAME, sessionId, ONE_YEAR_MS);
 
           return {
             success: true,
@@ -120,8 +151,7 @@ export const appRouter = router({
                 language: existing.language,
                 role: (existing.accountRole as any) || input.role || "farmer",
               });
-              const cookieOptions = getSessionCookieOptions(ctx.req);
-              ctx.res.cookie(COOKIE_NAME, sessionId, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+              safeSetCookie(ctx.res, ctx.req, COOKIE_NAME, sessionId, ONE_YEAR_MS);
               return { success: true, user, profile };
             }
           }
@@ -132,8 +162,7 @@ export const appRouter = router({
             location: "Guntur, Andhra Pradesh",
             role: input.role || "farmer",
           });
-          const cookieOptions = getSessionCookieOptions(ctx.req);
-          ctx.res.cookie(COOKIE_NAME, sessionId, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+          safeSetCookie(ctx.res, ctx.req, COOKIE_NAME, sessionId, ONE_YEAR_MS);
           return { success: true, user, profile };
         } catch (err: any) {
           throw new TRPCError({
@@ -165,8 +194,7 @@ export const appRouter = router({
             role: input.role,
           });
 
-          const cookieOptions = getSessionCookieOptions(ctx.req);
-          ctx.res.cookie(COOKIE_NAME, sessionId, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+          safeSetCookie(ctx.res, ctx.req, COOKIE_NAME, sessionId, ONE_YEAR_MS);
 
           return { success: true, user, profile };
         } catch (err: any) {
@@ -190,8 +218,7 @@ export const appRouter = router({
     }),
 
     logout: publicProcedure.mutation(({ ctx }) => {
-      const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      safeClearCookie(ctx.res, ctx.req, COOKIE_NAME);
       return { success: true } as const;
     }),
   }),
