@@ -200,3 +200,67 @@ button.market-row { width: 100%; border: 0; border-bottom: 1px solid #dce8df; ba
   color: #ffffff;
   border-color: #1f6b45;
 }
+
+/* Notice popover */
+.notice-popover {
+  position: absolute !important;
+  z-index: 60 !important;
+  top: 48px !important;
+  right: 0 !important;
+  display: flex !important;
+  width: 260px !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  border: 1px solid #cde0d1 !important;
+  border-radius: 10px !important;
+  padding: 14px 16px !important;
+  background: #ffffff !important;
+  box-shadow: 0 14px 34px rgba(19, 64, 38, 0.18) !important;
+  color: #384e40 !important;
+  font-size: 13px !important;
+}
+.notice-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e4eee7;
+  padding-bottom: 8px;
+}
+.notice-popover-header b {
+  color: #1a4a2f;
+  font-size: 14px;
+  font-weight: 800;
+}
+.notice-close-btn {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: #f0f6f2;
+  color: #4b6353;
+  cursor: pointer;
+  transition: all 150ms;
+}
+.notice-close-btn:hover {
+  background: #e1efe5;
+  color: #1f6b45;
+}
+.notice-popover-body {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.notice-popover-body span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: #f7faf8;
+  font-size: 12px;
+  font-weight: 600;
+  color: #273d30;
+}
+

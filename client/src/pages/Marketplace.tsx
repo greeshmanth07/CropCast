@@ -559,24 +559,39 @@ export default function Marketplace({
             {tr.languageNotice}
           </button>
         </div>
-        <button className="notice-button" onClick={() => setNoticeOpen(!noticeOpen)} aria-label={tr.notifications}>
-          <Bell size={19} />
-          <i>{Math.min(9, requirements.length + orders.length)}</i>
-        </button>
-        {noticeOpen && (
-          <div className="notice-popover">
-            <b>{tr.notifications}</b>
-            <span>
-              <Handshake size={13} /> {requirements.length} {tr.requirements}
-            </span>
-            <span>
-              <Truck size={13} /> {orders.length} {tr.orders}
-            </span>
-            <span>
-              <Sparkles size={13} /> {tr.high} {tr.demand}
-            </span>
-          </div>
-        )}
+        <div className="relative inline-block">
+          <button className="notice-button" onClick={() => setNoticeOpen(!noticeOpen)} aria-label={tr.notifications}>
+            <Bell size={19} />
+            <i>{Math.min(9, requirements.length + orders.length)}</i>
+          </button>
+          {noticeOpen && (
+            <div className="notice-popover" role="dialog" aria-label="Notifications">
+              <div className="notice-popover-header">
+                <b>{tr.notifications}</b>
+                <button
+                  type="button"
+                  className="notice-close-btn"
+                  onClick={() => setNoticeOpen(false)}
+                  aria-label="Close notifications"
+                  title="Close"
+                >
+                  <X size={15} />
+                </button>
+              </div>
+              <div className="notice-popover-body">
+                <span>
+                  <Handshake size={14} color="#1f6b45" /> {requirements.length} {tr.requirements} active
+                </span>
+                <span>
+                  <Truck size={14} color="#1f6b45" /> {orders.length} {tr.orders} scheduled
+                </span>
+                <span>
+                  <Sparkles size={14} color="#e67e22" /> High market demand in Guntur
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
       </header>
 
       {!directDashboard && (
