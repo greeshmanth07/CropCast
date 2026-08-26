@@ -62,11 +62,53 @@ const trpcClient = trpc.createClient({
         }
         return {};
       },
-      fetch(input, init) {
-        return globalThis.fetch(input, {
-          ...(init ?? {}),
-          credentials: "include",
-        });
+      async fetch(input, init) {
+        try {
+          const res = await globalThis.fetch(input, {
+            ...(init ?? {}),
+            credentials: "include",
+          });
+          const contentType = res.headers.get("content-type") || "";
+          if (!contentType.includes("application/json") && !res.ok) {
+            const text = await res.text();
+            return new Response(
+              JSON.stringify([
+                {
+                  error: {
+                    json: {
+                      message: text || "Server communication error. Please try again.",
+                      code: -32000,
+                      data: { code: "INTERNAL_SERVER_ERROR", httpStatus: res.status },
+                    },
+                  },
+                },
+              ]),
+              {
+                status: res.status,
+                headers: { "Content-Type": "application/json" },
+              }
+            );
+          }
+          return res;
+        } catch (err: any) {
+          return new Response(
+            JSON.stringify([
+              {
+                error: {
+                  json: {
+                    message: err?.message || "Network request failed. Please check connection.",
+                    code: -32000,
+                    data: { code: "INTERNAL_SERVER_ERROR", httpStatus: 500 },
+                  },
+                },
+              },
+            ]),
+            {
+              status: 500,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        }
       },
     }),
   ],

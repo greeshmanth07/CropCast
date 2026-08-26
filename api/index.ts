@@ -17,6 +17,18 @@ const trpcHandler = createExpressMiddleware({
   },
 });
 
+app.use((req, res, next) => {
+  if (req.url.startsWith("/api/trpc")) {
+    req.url = req.url.replace(/^\/api\/trpc/, "");
+    return trpcHandler(req, res, next);
+  }
+  if (req.url.startsWith("/trpc")) {
+    req.url = req.url.replace(/^\/trpc/, "");
+    return trpcHandler(req, res, next);
+  }
+  next();
+});
+
 app.use("/api/trpc", trpcHandler);
 app.use("/trpc", trpcHandler);
 
