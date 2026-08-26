@@ -3,7 +3,7 @@ import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { buyerRequirements, farmerProfiles, InsertFarmerProfile, InsertUser, logisticsRoutes, marketplaceOrders, produceListings, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
-import { buildDemandForecast, buildRoutePlan } from "./marketplaceLogic";
+import { buildDemandForecast, buildRoutePlan } from "./matching";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 

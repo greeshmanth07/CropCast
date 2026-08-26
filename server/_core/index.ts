@@ -44,7 +44,7 @@ async function startServer() {
     try {
       const crop = req.body?.crop || "Tomato";
       const market = req.body?.market || "Guntur";
-      const { getPriceForecast } = await import("../forecast/forecast.service");
+      const { getPriceForecast } = await import("../forecast/service");
       const forecast = await getPriceForecast(crop, market);
       res.json(forecast);
     } catch (err: any) {
@@ -56,7 +56,7 @@ async function startServer() {
     try {
       const crop = (req.query.crop as string) || "Tomato";
       const market = (req.query.market as string) || "Guntur";
-      const { getValidationMetrics } = await import("../forecast/forecast.service");
+      const { getValidationMetrics } = await import("../forecast/service");
       const metrics = await getValidationMetrics(crop, market);
       res.json(metrics);
     } catch (err: any) {

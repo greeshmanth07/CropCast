@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getPriceForecast, getValidationMetrics } from "./forecast/forecast.service";
+import { getPriceForecast, getValidationMetrics } from "./forecast/service";
 
 describe("7-Day Agricultural Price Forecasting Pipeline", () => {
   it("generates a 7-day crop price forecast with 8 history points and 7 forecast days", async () => {

@@ -1,4 +1,4 @@
-import { ForecastResponse, ValidationMetricsResponse } from "./forecast.types";
+import { ForecastResponse, ValidationMetricsResponse } from "./types";
 
 const ML_SERVICE_URL = process.env.ML_SERVICE_URL || "http://127.0.0.1:8000";
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildDemandForecast, buildRoutePlan } from "./marketplaceLogic";
+import { buildDemandForecast, buildRoutePlan } from "./matching";
 
 describe("marketplace decision helpers", () => {
   it("marks available tomatoes as a high-demand opportunity", () => {

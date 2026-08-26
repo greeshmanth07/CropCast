@@ -194,13 +194,13 @@ export const appRouter = router({
     get7Day: publicProcedure
       .input(z.object({ crop: z.string().default("Tomato"), market: z.string().default("Guntur") }))
       .query(async ({ input }) => {
-        const { getPriceForecast } = await import("./forecast/forecast.service");
+        const { getPriceForecast } = await import("./forecast/service");
         return getPriceForecast(input.crop, input.market);
       }),
     getValidationMetrics: publicProcedure
       .input(z.object({ crop: z.string().default("Tomato"), market: z.string().default("Guntur") }))
       .query(async ({ input }) => {
-        const { getValidationMetrics } = await import("./forecast/forecast.service");
+        const { getValidationMetrics } = await import("./forecast/service");
         return getValidationMetrics(input.crop, input.market);
       }),
   }),
