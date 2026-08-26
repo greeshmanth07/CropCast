@@ -1257,10 +1257,10 @@ export default function Home() {
                     className="watchlist-chip"
                     onClick={() => openCrop(crop)}
                   >
-                    <img src={crop.image} alt={crop.name === "Turmeric" ? "Turmeric" : crop.name === "Cotton" ? "Raw cotton bolls" : crop.altText || crop.name} style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover" }} />
-                    <span>{cropNames[language]?.[crop.id] || crop.name}</span>
-                    <strong style={{ color: "#1f6b45" }}>{money(crop.price)}</strong>
-                    <span style={{ fontSize: 11, color: crop.bestPrice >= crop.price ? "#1f6b45" : "#b91c1c" }}>
+                    <img src={crop.image} alt={crop.name === "Turmeric" ? "Turmeric" : crop.name === "Cotton" ? "Raw cotton bolls" : crop.altText || crop.name} style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                    <span className="watchlist-name">{cropNames[language]?.[crop.id] || crop.name}</span>
+                    <strong className="watchlist-price">{money(crop.price)}</strong>
+                    <span className={`watchlist-badge ${crop.bestPrice >= crop.price ? "is-up" : "is-down"}`}>
                       {crop.bestPrice >= crop.price ? `+${Math.round(((crop.bestPrice - crop.price) / crop.price) * 100)}%` : "-"}
                     </span>
                   </button>
