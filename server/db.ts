@@ -17,18 +17,25 @@ import { buildDemandForecast, buildRoutePlan } from "./matching";
 
 const { Pool } = pg;
 
+const DEFAULT_SUPABASE_DIRECT_URL =
+  "postgresql://postgres.akfpuhvlsafpafivwxnr:Kingofstates1119@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres";
+
 let _pool: pg.Pool | null = null;
 let _db: ReturnType<typeof drizzle> | null = null;
 
 export async function getDb() {
-  if (!_db && process.env.DATABASE_URL) {
+  if (!_db) {
+    const connStr =
+      process.env.DIRECT_URL ||
+      process.env.DATABASE_URL ||
+      DEFAULT_SUPABASE_DIRECT_URL;
     try {
       _pool = new Pool({
-        connectionString: process.env.DIRECT_URL || process.env.DATABASE_URL,
+        connectionString: connStr,
         ssl: { rejectUnauthorized: false },
         max: 10,
         idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 5000,
+        connectionTimeoutMillis: 7000,
       });
       _db = drizzle(_pool);
     } catch (error) {
