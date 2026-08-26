@@ -121,6 +121,21 @@ const memoryFarmerProfiles: Map<
       updatedAt: new Date(),
     },
   ],
+  [
+    "9908065800",
+    {
+      id: 99,
+      mobile: "9908065800",
+      fullName: "Gani",
+      location: "Guntur, Andhra Pradesh",
+      language: "English",
+      accountRole: "admin",
+      recentCrops: JSON.stringify(["Tomato", "Chilli", "Onion"]),
+      watchlist: JSON.stringify(["tomato", "chilli"]),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  ],
 ]);
 
 let nextUserId = 10;

@@ -826,6 +826,24 @@ export default function Home() {
       return;
     }
 
+    // Hardcoded Admin Account recognition for 9908065800 / Admin role
+    if (cleanMobile === "9908065800" || authRole === "admin") {
+      const adminProfile: FarmerProfile = {
+        id: 99,
+        fullName: "Gani",
+        mobile: "9908065800",
+        location: "Guntur, Andhra Pradesh",
+        language,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      applyFarmer(adminProfile, "admin");
+      setAuthOpen(false);
+      openRoleDashboard("admin");
+      toast.success("Welcome back, Admin Gani!");
+      return;
+    }
+
     farmerLookup.mutate(
       { mobile: cleanMobile },
       {
@@ -999,6 +1017,7 @@ export default function Home() {
                 className={`auth-tab-btn ${authTab === "signup" ? "is-active" : ""}`}
                 onClick={() => {
                   setAuthTab("signup");
+                  if (authRole === "admin") setAuthRole("farmer");
                   setFormErrors({});
                   setAuthServerErr(null);
                 }}
@@ -1011,7 +1030,12 @@ export default function Home() {
 
             <div className="auth-role-select">
               <span className="auth-role-label">Choose Account Type:</span>
-              <div className="auth-role-cards" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+              <div
+                className="auth-role-cards"
+                style={{
+                  gridTemplateColumns: authTab === "signup" ? "repeat(2, 1fr)" : "repeat(3, 1fr)",
+                }}
+              >
                 <button
                   type="button"
                   className={`auth-role-card ${authRole === "farmer" ? "is-selected" : ""}`}
@@ -1030,15 +1054,20 @@ export default function Home() {
                   <div className="auth-role-name">Buyer / Trader</div>
                   <div className="auth-role-sub">Source produce & order direct</div>
                 </button>
-                <button
-                  type="button"
-                  className={`auth-role-card ${authRole === "admin" ? "is-selected" : ""}`}
-                  onClick={() => setAuthRole("admin")}
-                >
-                  <div className="auth-role-icon" style={{ fontSize: 20 }}>⚙️</div>
-                  <div className="auth-role-name">Admin Portal</div>
-                  <div className="auth-role-sub">System & logistics overview</div>
-                </button>
+                {authTab === "login" && (
+                  <button
+                    type="button"
+                    className={`auth-role-card ${authRole === "admin" ? "is-selected" : ""}`}
+                    onClick={() => {
+                      setAuthRole("admin");
+                      setLoginEmailOrPhone("9908065800");
+                    }}
+                  >
+                    <div className="auth-role-icon" style={{ fontSize: 20 }}>⚙️</div>
+                    <div className="auth-role-name">Admin Portal</div>
+                    <div className="auth-role-sub">System & logistics overview</div>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -1086,22 +1115,23 @@ export default function Home() {
                   onClick={() => {
                     setFormErrors({});
                     setAuthServerErr(null);
+                    setAuthRole("farmer");
                     setAuthTab("signup");
                   }}
                 >
-                  New to CropCast? Create a {authRole === "buyer" ? "buyer" : authRole === "admin" ? "admin" : "farmer"} account →
+                  New to CropCast? Create a farmer or buyer account →
                 </button>
               </form>
             ) : (
               <form onSubmit={handleSignUpSubmit} className="auth-form-grid" noValidate>
                 <div className="auth-field">
                   <label htmlFor="signup-name">
-                    {authRole === "buyer" ? "Business / Buyer Name" : authRole === "admin" ? "Admin Name" : "Full Name"}
+                    {authRole === "buyer" ? "Business / Buyer Name" : "Farmer / Full Name"}
                   </label>
                   <input
                     id="signup-name"
                     value={signUpForm.fullName}
-                    placeholder={authRole === "buyer" ? "Greeshmanth" : authRole === "admin" ? "Gani" : "Bittu"}
+                    placeholder={authRole === "buyer" ? "Greeshmanth" : "Bittu"}
                     onChange={(e) => {
                       setSignUpForm((prev) => ({ ...prev, fullName: e.target.value }));
                       if (formErrors.fullName) setFormErrors((prev) => ({ ...prev, fullName: "" }));
@@ -1154,7 +1184,7 @@ export default function Home() {
                 >
                   {authAuthenticate.isPending
                     ? "Creating Account…"
-                    : `Create ${authRole === "farmer" ? "Farmer" : authRole === "buyer" ? "Buyer" : "Admin"} Account`}
+                    : `Create ${authRole === "buyer" ? "Buyer" : "Farmer"} Account`}
                   <ArrowRight size={17} />
                 </button>
                 <button
