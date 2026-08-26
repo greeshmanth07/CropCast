@@ -1,8 +1,9 @@
 import "dotenv/config";
 import express from "express";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
-import { appRouter } from "../server/routers";
-import { createContext } from "../server/_core/context";
+import { appRouter } from "./routers";
+import { createContext } from "./_core/context";
+import { getPriceForecast, getValidationMetrics } from "./forecast/service";
 
 const app = express();
 
@@ -24,10 +25,7 @@ app.post(["/api/forecast", "/forecast"], async (req, res) => {
   try {
     const crop = req.body?.crop || "Tomato";
     const market = req.body?.market || "Guntur";
-
-    const { getPriceForecast } = await import("../server/forecast/service");
     const forecast = await getPriceForecast(crop, market);
-
     res.json(forecast);
   } catch (err: any) {
     console.error("Forecast error:", err);
@@ -41,12 +39,7 @@ app.get(["/api/forecast/metrics", "/forecast/metrics"], async (req, res) => {
   try {
     const crop = (req.query.crop as string) || "Tomato";
     const market = (req.query.market as string) || "Guntur";
-
-    const { getValidationMetrics } = await import(
-      "../server/forecast/service"
-    );
     const metrics = await getValidationMetrics(crop, market);
-
     res.json(metrics);
   } catch (err: any) {
     console.error("Metrics error:", err);

@@ -202,7 +202,7 @@ var init_service = __esm({
   }
 });
 
-// api/index.ts
+// server/api.ts
 import "dotenv/config";
 import express from "express";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
@@ -1173,7 +1173,8 @@ async function createContext(opts) {
   };
 }
 
-// api/index.ts
+// server/api.ts
+init_service();
 var app = express();
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -1190,8 +1191,7 @@ app.post(["/api/forecast", "/forecast"], async (req, res) => {
   try {
     const crop = req.body?.crop || "Tomato";
     const market = req.body?.market || "Guntur";
-    const { getPriceForecast: getPriceForecast2 } = await Promise.resolve().then(() => (init_service(), service_exports));
-    const forecast = await getPriceForecast2(crop, market);
+    const forecast = await getPriceForecast(crop, market);
     res.json(forecast);
   } catch (err) {
     console.error("Forecast error:", err);
@@ -1204,8 +1204,7 @@ app.get(["/api/forecast/metrics", "/forecast/metrics"], async (req, res) => {
   try {
     const crop = req.query.crop || "Tomato";
     const market = req.query.market || "Guntur";
-    const { getValidationMetrics: getValidationMetrics2 } = await Promise.resolve().then(() => (init_service(), service_exports));
-    const metrics = await getValidationMetrics2(crop, market);
+    const metrics = await getValidationMetrics(crop, market);
     res.json(metrics);
   } catch (err) {
     console.error("Metrics error:", err);
@@ -1220,7 +1219,7 @@ app.use((err, req, res, next) => {
     error: err?.message || "A server error occurred"
   });
 });
-var index_default = app;
+var api_default = app;
 export {
-  index_default as default
+  api_default as default
 };
