@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { MapPin, Navigation, Check, ChevronDown, Loader2 } from "lucide-react";
 import {
   SOUTH_INDIA_LOCATIONS,
@@ -94,7 +94,7 @@ export function LocationInput({
       <div className="relative flex items-center">
         <MapPin
           size={17}
-          className="absolute left-3 text-[#2d6a4f] pointer-events-none"
+          className="absolute left-3 text-[#2d6a4f] pointer-events-none z-10"
         />
         <input
           id={id}
@@ -107,14 +107,15 @@ export function LocationInput({
           }}
           onFocus={() => setOpen(true)}
           placeholder={placeholder}
-          className="w-full pl-9 pr-24 py-2 text-sm bg-white border border-[#c3dbcd] rounded-lg text-[#1f2937] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2d6a4f] focus:border-transparent transition"
+          style={{ paddingLeft: "38px", paddingRight: "86px" }}
+          className="location-input-box w-full text-sm bg-white border border-[#c3dbcd] rounded-lg text-[#1f2937] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2d6a4f] focus:border-transparent transition"
           autoComplete="off"
         />
         <button
           type="button"
           onClick={handleDetectLocation}
           disabled={isDetecting}
-          className="absolute right-1.5 px-2.5 py-1 text-xs font-semibold bg-[#e8f5ed] hover:bg-[#d5edd9] text-[#1f6b45] rounded-md flex items-center gap-1 transition shadow-xs"
+          className="absolute right-1.5 px-2.5 py-1 text-xs font-semibold bg-[#e8f5ed] hover:bg-[#d5edd9] text-[#1f6b45] rounded-md flex items-center gap-1 transition shadow-xs z-10 cursor-pointer"
           title="Detect Current Location"
         >
           {isDetecting ? (

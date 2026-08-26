@@ -1030,7 +1030,7 @@ export default function Home() {
                     type="tel"
                     inputMode="numeric"
                     maxLength={14}
-                    placeholder="Enter 10-digit mobile (e.g. 9876543210)"
+                    placeholder="9908065800"
                     onChange={(e) => {
                       setLoginEmailOrPhone(e.target.value);
                       if (formErrors.login) setFormErrors((prev) => ({ ...prev, login: "" }));
@@ -1072,7 +1072,7 @@ export default function Home() {
                   <input
                     id="signup-name"
                     value={signUpForm.fullName}
-                    placeholder={authRole === "buyer" ? "Sri Krishna Supermarket" : "Ravi Kumar"}
+                    placeholder={authRole === "buyer" ? "Greeshmanth" : authRole === "admin" ? "Gani" : "Bittu"}
                     onChange={(e) => {
                       setSignUpForm((prev) => ({ ...prev, fullName: e.target.value }));
                       if (formErrors.fullName) setFormErrors((prev) => ({ ...prev, fullName: "" }));
@@ -1091,7 +1091,7 @@ export default function Home() {
                     type="tel"
                     inputMode="numeric"
                     maxLength={14}
-                    placeholder="e.g. 9876543210"
+                    placeholder="9908065800"
                     onChange={(e) => {
                       setSignUpForm((prev) => ({ ...prev, mobile: e.target.value }));
                       if (formErrors.mobile) setFormErrors((prev) => ({ ...prev, mobile: "" }));
