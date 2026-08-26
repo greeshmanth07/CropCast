@@ -615,19 +615,31 @@ export default function Home() {
 
     return points;
   }, [forecastData, selectedCrop, t.today]);
-  const applyFarmer = (record: { fullName: string; mobile: string; location: string; language: string }, targetRole?: "farmer" | "buyer" | "admin") => {
+  const applyFarmer = (record: { fullName: string; mobile: string; location: string; language: string; accountRole?: string }, targetRole?: "farmer" | "buyer" | "admin") => {
     const preferredLanguage = languages.some((item) => item.key === record.language) ? record.language as LanguageKey : "English";
-    const nextFarmer: FarmerProfile = { fullName: record.fullName, mobile: record.mobile, location: record.location, language: preferredLanguage };
+    const nextFarmer: FarmerProfile = {
+      fullName: record.fullName,
+      mobile: record.mobile,
+      location: record.location,
+      language: preferredLanguage,
+      accountRole: targetRole || record.accountRole || "farmer",
+    };
     setFarmer(nextFarmer);
     setLanguage(preferredLanguage);
-    localStorage.setItem("agrimarket-farmer-mobile", record.mobile);
-    localStorage.setItem("agrimarket-farmer-profile", JSON.stringify(nextFarmer));
-    localStorage.setItem("agrimarket-language", preferredLanguage);
-    if (targetRole) localStorage.setItem("agrimarket-active-role", targetRole);
+    try {
+      localStorage.setItem("cropcast-farmer-mobile", record.mobile);
+      localStorage.setItem("cropcast-farmer-profile", JSON.stringify(nextFarmer));
+      localStorage.setItem("cropcast-language", preferredLanguage);
+      localStorage.setItem("cropcast-active-role", targetRole || nextFarmer.accountRole || "farmer");
+      localStorage.setItem("agrimarket-farmer-mobile", record.mobile);
+      localStorage.setItem("agrimarket-farmer-profile", JSON.stringify(nextFarmer));
+      localStorage.setItem("agrimarket-language", preferredLanguage);
+      localStorage.setItem("agrimarket-active-role", targetRole || nextFarmer.accountRole || "farmer");
+    } catch {}
   };
 
   useEffect(() => {
-    const storedMobile = localStorage.getItem("agrimarket-farmer-mobile");
+    const storedMobile = localStorage.getItem("cropcast-farmer-mobile") || localStorage.getItem("agrimarket-farmer-mobile");
     if (!storedMobile) return;
     farmerLookup.mutate({ mobile: storedMobile }, {
       onSuccess: (record) => {
@@ -1315,8 +1327,14 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => {
-                  if (farmer) openRoleDashboard("farmer");
-                  else openAuthModal("signup", "farmer");
+                  const saved = farmer || getInitialFarmer();
+                  if (saved) {
+                    openRoleDashboard("farmer");
+                  } else {
+                    const storedMobile = localStorage.getItem("cropcast-farmer-mobile") || localStorage.getItem("agrimarket-farmer-mobile");
+                    if (storedMobile) setLoginEmailOrPhone(storedMobile);
+                    openAuthModal("login", "farmer");
+                  }
                 }}
               >
                 <span style={{ fontSize: 38, display: "grid", placeItems: "center", minWidth: 48, minHeight: 48 }}>👨‍🌾</span>
@@ -1326,8 +1344,14 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => {
-                  if (farmer) openRoleDashboard("buyer");
-                  else openAuthModal("signup", "buyer");
+                  const saved = farmer || getInitialFarmer();
+                  if (saved) {
+                    openRoleDashboard("buyer");
+                  } else {
+                    const storedMobile = localStorage.getItem("cropcast-farmer-mobile") || localStorage.getItem("agrimarket-farmer-mobile");
+                    if (storedMobile) setLoginEmailOrPhone(storedMobile);
+                    openAuthModal("login", "buyer");
+                  }
                 }}
               >
                 <span style={{ fontSize: 38, display: "grid", placeItems: "center", minWidth: 48, minHeight: 48 }}>🧺</span>

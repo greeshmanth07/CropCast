@@ -464,12 +464,20 @@ export default function Marketplace({
   const publish = () => {
     const quantityKg = Number(listingForm.quantityKg);
     const pricePerKg = Number(listingForm.pricePerKg);
-    if (!farmer) return toast.error(tr.loginRequired);
+    const effectiveFarmer = farmer || (() => {
+      try {
+        const raw = localStorage.getItem("cropcast-farmer-profile") || localStorage.getItem("agrimarket-farmer-profile");
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    })();
+    if (!effectiveFarmer) return toast.error(tr.loginRequired);
     if (!quantityKg || !pricePerKg || !listingForm.location) return toast.error(tr.listingRequired);
     createListing.mutate(
       {
-        farmerMobile: farmer.mobile,
-        sellerName: farmer.fullName,
+        farmerMobile: effectiveFarmer.mobile,
+        sellerName: effectiveFarmer.fullName,
         crop: listingForm.crop,
         quantityKg,
         quality: listingForm.quality,
