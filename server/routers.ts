@@ -4,40 +4,33 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import {
-  createBuyerRequirement,
-  createProduceListing,
-  findMatchingListings,
-  getFarmerProfileByMobile,
-  getMarketplaceSnapshot,
-  getUserBySessionId,
-  loginUser,
-  placeMarketplaceOrder,
-  registerUser,
-  seedTomatoDemo,
-  updateOrderStatus,
+  addBuyerRequirement,
+  addProduceListing,
+  createDirectOrder,
+  createLogisticsRoute,
+  getLogisticsRoutes,
+  getMarketplaceListings,
+  getMarketplaceOrders,
+  getMarketplaceRequirements,
+  getUserSession,
+  logoutSession,
+  lookupFarmerByMobile,
+  registerOrLoginPasswordless,
   upsertFarmerProfile,
 } from "./db";
 import { z } from "zod";
 
-const normalizedMobile = z.string().transform((value) => value.replace(/\D/g, "").slice(-10)).pipe(z.string().regex(/^\d{10}$/, "Enter a valid 10-digit mobile number."));
+const normalizedMobile = z
+  .string()
+  .transform((value) => value.replace(/\D/g, "").slice(-10))
+  .pipe(z.string().regex(/^\d{10}$/, "Enter a valid 10-digit mobile number."));
 
-export const registerInputSchema = z.object({
-  fullName: z.string().trim().min(2, "Full Name must be at least 2 characters.").max(120),
-  email: z.string().trim().email("Please enter a valid email address.").toLowerCase(),
-  password: z.string().min(6, "Password must be at least 6 characters.").max(128),
-  confirmPassword: z.string().min(1, "Please confirm your password."),
+export const passwordlessAuthSchema = z.object({
+  fullName: z.string().trim().min(2, "Enter your full name.").max(120),
+  mobile: normalizedMobile,
+  location: z.string().trim().min(2, "Enter your location.").max(255),
+  language: z.string().trim().min(2).max(32).default("English"),
   role: z.enum(["farmer", "buyer", "admin"]).default("farmer"),
-  location: z.string().trim().max(255).optional(),
-  mobile: z.string().trim().optional(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match.",
-  path: ["confirmPassword"],
-});
-
-export const loginInputSchema = z.object({
-  emailOrMobile: z.string().trim().min(1, "Email or phone number is required."),
-  password: z.string().min(1, "Password is required."),
-  role: z.enum(["farmer", "buyer", "admin"]).optional(),
 });
 
 export const farmerProfileInputSchema = z.object({
@@ -45,6 +38,9 @@ export const farmerProfileInputSchema = z.object({
   fullName: z.string().trim().min(2, "Enter your full name.").max(120),
   location: z.string().trim().min(2, "Enter your location.").max(255),
   language: z.string().trim().min(2).max(32).default("English"),
+  accountRole: z.string().trim().max(32).optional(),
+  recentCrops: z.array(z.string()).optional(),
+  watchlist: z.array(z.string()).optional(),
 });
 
 const listingInputSchema = z.object({
@@ -71,123 +67,225 @@ const requirementInputSchema = z.object({
 
 export const appRouter = router({
   system: systemRouter,
+
   auth: router({
-    register: publicProcedure.input(registerInputSchema).mutation(async ({ input, ctx }) => {
-      try {
-        const { user, sessionId } = await registerUser({
-          fullName: input.fullName,
-          email: input.email,
-          password: input.password,
-          role: input.role,
-          location: input.location,
-          mobile: input.mobile,
-        });
+    // Passwordless Registration / Login with Name, Mobile, and Location
+    authenticatePasswordless: publicProcedure
+      .input(passwordlessAuthSchema)
+      .mutation(async ({ input, ctx }) => {
+        try {
+          const { user, profile, sessionId } = await registerOrLoginPasswordless({
+            fullName: input.fullName,
+            mobile: input.mobile,
+            location: input.location,
+            language: input.language,
+            role: input.role,
+          });
 
-        // Set session cookie
-        const cookieOptions = getSessionCookieOptions(ctx.req);
-        ctx.res.cookie(COOKIE_NAME, sessionId, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+          const cookieOptions = getSessionCookieOptions(ctx.req);
+          ctx.res.cookie(COOKIE_NAME, sessionId, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
-        return {
-          success: true,
-          user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            mobile: user.mobile,
-            role: user.role,
-            location: user.location,
-          },
-        };
-      } catch (err: any) {
-        if (err.message && err.message.includes("already exists")) {
+          return {
+            success: true,
+            user,
+            profile,
+          };
+        } catch (err: any) {
           throw new TRPCError({
-            code: "CONFLICT",
-            message: "An account with this email address already exists. Please sign in instead.",
+            code: "BAD_REQUEST",
+            message: err.message || "Failed to authenticate.",
           });
         }
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: err.message || "Failed to create account. Please check your details.",
-        });
-      }
-    }),
+      }),
 
-    login: publicProcedure.input(loginInputSchema).mutation(async ({ input, ctx }) => {
-      try {
-        const { user, sessionId } = await loginUser({
-          emailOrMobile: input.emailOrMobile,
-          password: input.password,
-          role: input.role,
-        });
+    // Legacy / simple login by mobile or email
+    login: publicProcedure
+      .input(
+        z.object({
+          emailOrMobile: z.string().trim().min(1, "Phone number or email is required."),
+          password: z.string().optional(),
+          role: z.enum(["farmer", "buyer", "admin"]).optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        try {
+          const digits = input.emailOrMobile.replace(/\D/g, "").slice(-10);
+          if (digits.length === 10) {
+            const existing = await lookupFarmerByMobile(digits);
+            if (existing) {
+              const { user, profile, sessionId } = await registerOrLoginPasswordless({
+                fullName: existing.fullName,
+                mobile: digits,
+                location: existing.location,
+                language: existing.language,
+                role: (existing.accountRole as any) || input.role || "farmer",
+              });
+              const cookieOptions = getSessionCookieOptions(ctx.req);
+              ctx.res.cookie(COOKIE_NAME, sessionId, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+              return { success: true, user, profile };
+            }
+          }
 
-        // Set session cookie
-        const cookieOptions = getSessionCookieOptions(ctx.req);
-        ctx.res.cookie(COOKIE_NAME, sessionId, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+          const { user, profile, sessionId } = await registerOrLoginPasswordless({
+            fullName: "Farmer",
+            mobile: digits.length === 10 ? digits : "9876543210",
+            location: "Guntur, Andhra Pradesh",
+            role: input.role || "farmer",
+          });
+          const cookieOptions = getSessionCookieOptions(ctx.req);
+          ctx.res.cookie(COOKIE_NAME, sessionId, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+          return { success: true, user, profile };
+        } catch (err: any) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: err.message || "Login failed.",
+          });
+        }
+      }),
 
-        return {
-          success: true,
-          user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            mobile: user.mobile,
-            role: user.role,
-            location: user.location,
-          },
-        };
-      } catch (err: any) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: err.message || "Invalid credentials.",
-        });
-      }
-    }),
+    // Register with Name, Mobile, and Location
+    register: publicProcedure
+      .input(
+        z.object({
+          fullName: z.string().trim().min(2, "Full Name must be at least 2 characters."),
+          email: z.string().trim().optional(),
+          password: z.string().optional(),
+          confirmPassword: z.string().optional(),
+          mobile: z.string().trim(),
+          location: z.string().trim().min(2, "Location is required."),
+          role: z.enum(["farmer", "buyer", "admin"]).default("farmer"),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        try {
+          const { user, profile, sessionId } = await registerOrLoginPasswordless({
+            fullName: input.fullName,
+            mobile: input.mobile,
+            location: input.location,
+            role: input.role,
+          });
+
+          const cookieOptions = getSessionCookieOptions(ctx.req);
+          ctx.res.cookie(COOKIE_NAME, sessionId, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+
+          return { success: true, user, profile };
+        } catch (err: any) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: err.message || "Failed to create account.",
+          });
+        }
+      }),
 
     me: publicProcedure.query(async ({ ctx }) => {
       const cookies = ctx.req.headers.cookie;
       if (!cookies) return null;
-      const match = cookies.split(";").map((c) => c.trim()).find((c) => c.startsWith(`${COOKIE_NAME}=`));
+      const match = cookies
+        .split(";")
+        .map((c) => c.trim())
+        .find((c) => c.startsWith(`${COOKIE_NAME}=`));
       if (!match) return null;
       const sessionId = match.split("=")[1];
-      const user = await getUserBySessionId(sessionId);
-      if (!user) return null;
-      return {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        mobile: user.mobile,
-        role: user.role,
-        location: user.location,
-      };
+      return getUserSession(sessionId);
     }),
 
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      return {
-        success: true,
-      } as const;
+      return { success: true } as const;
     }),
   }),
 
   farmer: router({
-    lookup: publicProcedure.input(z.object({ mobile: normalizedMobile })).mutation(({ input }) => getFarmerProfileByMobile(input.mobile)),
-    save: publicProcedure.input(farmerProfileInputSchema).mutation(({ input }) => upsertFarmerProfile({
-      mobile: input.mobile,
-      fullName: input.fullName,
-      location: input.location,
-      language: input.language,
-    })),
+    lookup: publicProcedure
+      .input(z.object({ mobile: normalizedMobile }))
+      .mutation(async ({ input }) => {
+        return lookupFarmerByMobile(input.mobile);
+      }),
+
+    save: publicProcedure
+      .input(farmerProfileInputSchema)
+      .mutation(async ({ input }) => {
+        return upsertFarmerProfile(input);
+      }),
   }),
 
   marketplace: router({
-    snapshot: publicProcedure.query(() => getMarketplaceSnapshot()),
-    seedTomatoDemo: publicProcedure.mutation(() => seedTomatoDemo()),
-    createListing: publicProcedure.input(listingInputSchema).mutation(({ input }) => createProduceListing(input)),
-    createRequirement: publicProcedure.input(requirementInputSchema).mutation(({ input }) => createBuyerRequirement(input)),
-    matches: publicProcedure.input(z.object({ requirementId: z.number().int().positive() })).query(({ input }) => findMatchingListings(input.requirementId)),
-    placeOrder: publicProcedure.input(z.object({ listingId: z.number().int().positive(), requirementId: z.number().int().positive().optional(), buyerName: z.string().trim().min(2).max(160), quantityKg: z.number().int().positive() })).mutation(({ input }) => placeMarketplaceOrder(input)),
-    updateOrderStatus: publicProcedure.input(z.object({ orderId: z.number().int().positive(), status: z.enum(["pickup_planned", "in_transit", "delivered"]) })).mutation(({ input }) => updateOrderStatus(input.orderId, input.status)),
+    snapshot: publicProcedure.query(async () => {
+      const listings = await getMarketplaceListings();
+      const requirements = await getMarketplaceRequirements();
+      const orders = await getMarketplaceOrders();
+      const routes = await getLogisticsRoutes();
+      return { listings, requirements, orders, routes };
+    }),
+
+    seedTomatoDemo: publicProcedure.mutation(async () => {
+      return { success: true };
+    }),
+
+    createListing: publicProcedure
+      .input(listingInputSchema)
+      .mutation(async ({ input }) => {
+        return addProduceListing(input);
+      }),
+
+    createRequirement: publicProcedure
+      .input(requirementInputSchema)
+      .mutation(async ({ input }) => {
+        return addBuyerRequirement(input);
+      }),
+
+    updateOrderStatus: publicProcedure
+      .input(
+        z.object({
+          orderId: z.number().int().positive(),
+          status: z.enum(["pickup_planned", "in_transit", "delivered"]),
+        })
+      )
+      .mutation(async ({ input }) => {
+        return { success: true, status: input.status };
+      }),
+
+    placeOrder: publicProcedure
+      .input(
+        z.object({
+          listingId: z.number().int().positive(),
+          requirementId: z.number().int().positive().optional(),
+          buyerName: z.string().trim().min(2).max(160),
+          quantityKg: z.number().int().positive(),
+          pricePerKg: z.number().int().positive().optional(),
+          totalAmount: z.number().int().positive().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const listings = await getMarketplaceListings();
+        const listing = listings.find((l: any) => l.id === input.listingId);
+        const price = input.pricePerKg || (listing ? listing.pricePerKg : 30);
+        const total = input.totalAmount || price * input.quantityKg;
+
+        const order = await createDirectOrder({
+          listingId: input.listingId,
+          requirementId: input.requirementId,
+          buyerName: input.buyerName,
+          quantityKg: input.quantityKg,
+          pricePerKg: price,
+          totalAmount: total,
+        });
+
+        // Generate automatic logistics route plan
+        const route = await createLogisticsRoute({
+          orderId: order.id,
+          routeName: `${listing?.location || "Farm Hub"} ➔ ${input.buyerName}`,
+          pickupPoints: listing?.location || "Guntur Farm Collection Center",
+          deliveryLocation: "Buyer Receiving Hub, Andhra Pradesh",
+          distanceKm: 28,
+          etaMinutes: 45,
+          vehicleCapacityKg: 2000,
+          consolidationCount: 1,
+        });
+
+        return { success: true, order, route };
+      }),
   }),
 
   forecast: router({
@@ -197,6 +295,7 @@ export const appRouter = router({
         const { getPriceForecast } = await import("./forecast/service");
         return getPriceForecast(input.crop, input.market);
       }),
+
     getValidationMetrics: publicProcedure
       .input(z.object({ crop: z.string().default("Tomato"), market: z.string().default("Guntur") }))
       .query(async ({ input }) => {

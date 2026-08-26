@@ -44,6 +44,7 @@ import {
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { COMMODITIES, getCommodityImage, getCommodityAlt } from "@shared/commodities";
+import { LocationInput } from "@/components/LocationInput";
 
 type Role = "farmer" | "buyer" | "admin";
 type Screen = "dashboard" | "list" | "market" | "requirement" | "confirm" | "track" | "history";
@@ -537,8 +538,14 @@ export default function Marketplace({
   };
 
   const cropLabel = (crop: string) => tr[crop.toLowerCase() as keyof typeof english] || crop;
-  const dayLabel = (day: string) => (day === "Today" ? tr.today : day === "Tomorrow" ? tr.tomorrow : day === "In 2 days" ? tr.inTwoDays : day);
-  const roleIcon = role === "farmer" ? <Sprout size={18} /> : role === "buyer" ? <ShoppingBasket size={18} /> : <Users size={18} />;
+  const roleIcon =
+    role === "farmer" ? (
+      <span style={{ fontSize: 20 }}>👨‍🌾</span>
+    ) : role === "buyer" ? (
+      <span style={{ fontSize: 20 }}>🧺</span>
+    ) : (
+      <span style={{ fontSize: 20 }}>⚙️</span>
+    );
 
   return (
     <main className="farmer-marketplace">
@@ -625,23 +632,17 @@ export default function Marketplace({
         {!directDashboard && (
           <div className="role-cards" role="tablist">
             <button className={role === "farmer" ? "active" : ""} onClick={() => selectRole("farmer")}>
-              <span>
-                <Sprout size={22} />
-              </span>
+              <span style={{ fontSize: 24 }}>👨‍🌾</span>
               <b>{tr.farmer}</b>
               <small>{tr.crops}</small>
             </button>
             <button className={role === "buyer" ? "active" : ""} onClick={() => selectRole("buyer")}>
-              <span>
-                <ShoppingBasket size={22} />
-              </span>
+              <span style={{ fontSize: 24 }}>🧺</span>
               <b>{tr.buyer}</b>
               <small>{tr.find}</small>
             </button>
             <button className={role === "admin" ? "active" : ""} onClick={() => selectRole("admin")}>
-              <span>
-                <SlidersHorizontal size={22} />
-              </span>
+              <span style={{ fontSize: 24 }}>⚙️</span>
               <b>{tr.admin}</b>
               <small>{tr.active}</small>
             </button>
@@ -895,20 +896,24 @@ export default function Marketplace({
                     <MapPin size={36} color="#1F6B45" />
                   </span>
                   <h2>{tr.where}</h2>
-                  <input
-                    className="big-input"
-                    value={listingForm.location}
-                    onChange={(event) => setListingForm({ ...listingForm, location: event.target.value })}
-                  />
-                  <button
-                    className="location-help"
-                    onClick={() => {
-                      setListingForm({ ...listingForm, location: farmer?.location || "Tenali" });
-                      toast.message("Tenali selected");
-                    }}
-                  >
-                    <MapPin size={14} /> Use my location
-                  </button>
+                  <div style={{ width: "100%", maxWidth: 360, margin: "8px 0" }}>
+                    <LocationInput
+                      value={listingForm.location}
+                      placeholder="Search South Indian district/city..."
+                      onChange={(loc) => setListingForm({ ...listingForm, location: loc })}
+                    />
+                  </div>
+                  {farmer?.location && (
+                    <button
+                      className="location-help"
+                      onClick={() => {
+                        setListingForm({ ...listingForm, location: farmer.location });
+                        toast.message(`${farmer.location} selected`);
+                      }}
+                    >
+                      <MapPin size={14} /> Use my profile location ({farmer.location})
+                    </button>
+                  )}
                 </>
               )}
               {listStep === 4 && (

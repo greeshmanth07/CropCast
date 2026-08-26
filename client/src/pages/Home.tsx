@@ -63,10 +63,21 @@ import { trpc } from "@/lib/trpc";
 import { useTheme } from "@/contexts/ThemeContext";
 import Marketplace from "@/pages/Marketplace";
 import { COMMODITIES, Commodity } from "@shared/commodities";
+import { LocationInput } from "@/components/LocationInput";
+import { findNearestSouthIndiaLocation, formatLocationString } from "@/lib/southIndiaLocations";
 
 type LanguageKey = "English" | "हिंदी" | "తెలుగు" | "தமிழ்" | "ಕನ್ನಡ" | "मराठी";
 type View = "home" | "crop" | "profile" | "marketplace";
-type FarmerProfile = { fullName: string; mobile: string; location: string; language: LanguageKey };
+type FarmerProfile = {
+  id?: number;
+  fullName: string;
+  mobile: string;
+  location: string;
+  language: LanguageKey;
+  accountRole?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
 type ProfilePanel = "profile" | "settings";
 
 const languages: Array<{ key: LanguageKey; label: string; voice: string }> = [
@@ -392,17 +403,12 @@ export default function Home() {
   // Authentication & Registration state
   const [authOpen, setAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState<"login" | "signup">("login");
-  const [authRole, setAuthRole] = useState<"farmer" | "buyer">("farmer");
+  const [authRole, setAuthRole] = useState<"farmer" | "buyer" | "admin">("farmer");
   const [loginEmailOrPhone, setLoginEmailOrPhone] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
   const [signUpForm, setSignUpForm] = useState({
     fullName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    location: "",
     mobile: "",
-    buyerType: "Retailer",
+    location: "Guntur, Andhra Pradesh",
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [authServerErr, setAuthServerErr] = useState<string | null>(null);
@@ -412,11 +418,28 @@ export default function Home() {
   const [profilePanel, setProfilePanel] = useState<ProfilePanel>("profile");
   const [selectedMarket, setSelectedMarket] = useState("");
 
-  const authRegister = trpc.auth.register.useMutation();
-  const authLogin = trpc.auth.login.useMutation();
+  const authAuthenticate = trpc.auth.authenticatePasswordless.useMutation();
   const authLogout = trpc.auth.logout.useMutation();
   const farmerLookup = trpc.farmer.lookup.useMutation();
   const farmerSave = trpc.farmer.save.useMutation();
+
+  // Geolocation trigger on site entrance to set default location
+  useEffect(() => {
+    if (typeof window !== "undefined" && navigator.geolocation && !farmer?.location) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const nearest = findNearestSouthIndiaLocation(pos.coords.latitude, pos.coords.longitude);
+          const formatted = formatLocationString(nearest);
+          setSignUpForm((prev) => ({ ...prev, location: formatted }));
+        },
+        () => {
+          // Default fallback to Guntur, Andhra Pradesh
+          setSignUpForm((prev) => ({ ...prev, location: "Guntur, Andhra Pradesh" }));
+        },
+        { timeout: 6000 }
+      );
+    }
+  }, [farmer]);
 
   const [perspective, setPerspective] = useState<"farmer" | "buyer">(() => {
     return (localStorage.getItem("cropcast-perspective") as "farmer" | "buyer") || (localStorage.getItem("agrimarket-perspective") as "farmer" | "buyer") || "farmer";
@@ -701,7 +724,7 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const openAuthModal = (tab: "login" | "signup" = "login", role: "farmer" | "buyer" = "farmer") => {
+  const openAuthModal = (tab: "login" | "signup" = "login", role: "farmer" | "buyer" | "admin" = "farmer") => {
     setAuthTab(tab);
     setAuthRole(role);
     setFormErrors({});
@@ -710,126 +733,149 @@ export default function Home() {
     setMenuOpen(false);
   };
 
-  const validateSignUp = () => {
+  const handleSignUpSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    setAuthServerErr(null);
     const errors: Record<string, string> = {};
+
     if (!signUpForm.fullName.trim()) {
       errors.fullName = "Please enter your full name.";
     } else if (signUpForm.fullName.trim().length < 2) {
       errors.fullName = "Full name must be at least 2 characters.";
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!signUpForm.email.trim()) {
-      errors.email = "Please enter your email address.";
-    } else if (!emailRegex.test(signUpForm.email.trim())) {
-      errors.email = "Please enter a valid email address.";
+    const cleanMobile = signUpForm.mobile.replace(/\D/g, "").slice(-10);
+    if (!cleanMobile) {
+      errors.mobile = "Please enter your 10-digit mobile number.";
+    } else if (!/^\d{10}$/.test(cleanMobile)) {
+      errors.mobile = "Please enter a valid 10-digit Indian mobile number.";
     }
 
-    if (!signUpForm.password) {
-      errors.password = "Please enter a password.";
-    } else if (signUpForm.password.length < 6) {
-      errors.password = "Password must be at least 6 characters.";
+    if (!signUpForm.location.trim()) {
+      errors.location = "Please enter or detect your location.";
     }
 
-    if (!signUpForm.confirmPassword) {
-      errors.confirmPassword = "Please confirm your password.";
-    } else if (signUpForm.confirmPassword !== signUpForm.password) {
-      errors.confirmPassword = "Passwords do not match.";
-    }
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSignUpSubmit = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    setAuthServerErr(null);
-    if (!validateSignUp()) return;
-
-    authRegister.mutate({
-      fullName: signUpForm.fullName.trim(),
-      email: signUpForm.email.trim().toLowerCase(),
-      password: signUpForm.password,
-      confirmPassword: signUpForm.confirmPassword,
-      role: authRole,
-      location: signUpForm.location.trim() || undefined,
-      mobile: signUpForm.mobile.trim() || undefined,
-    }, {
-      onSuccess: (res) => {
-        if (res.user) {
-          const profile: FarmerProfile = {
-            id: res.user.id,
-            fullName: res.user.name,
-            mobile: res.user.mobile,
-            location: res.user.location,
-            language,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          };
-          applyFarmer(profile, authRole);
-          setAuthOpen(false);
-          openRoleDashboard(authRole);
-          toast.success(authRole === "buyer" ? "Buyer account created successfully!" : "Farmer account created successfully!");
-        }
-      },
-      onError: (err) => {
-        setAuthServerErr(err.message || "Failed to create account. Please check your details.");
-      }
-    });
-  };
-
-  const handleLoginSubmit = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    setAuthServerErr(null);
-    const errors: Record<string, string> = {};
-    if (!loginEmailOrPhone.trim()) {
-      errors.login = "Please enter your email address or mobile number.";
-    }
-    if (!loginPassword) {
-      errors.password = "Please enter your password.";
-    }
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       return;
     }
 
-    authLogin.mutate({
-      emailOrMobile: loginEmailOrPhone.trim(),
-      password: loginPassword,
-      role: authRole,
-    }, {
-      onSuccess: (res) => {
-        if (res.user) {
-          const profile: FarmerProfile = {
-            id: res.user.id,
-            fullName: res.user.name,
-            mobile: res.user.mobile,
-            location: res.user.location,
-            language,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          };
-          applyFarmer(profile, authRole);
-          setAuthOpen(false);
-          openRoleDashboard(authRole);
-          toast.success("Signed in successfully.");
-        }
+    authAuthenticate.mutate(
+      {
+        fullName: signUpForm.fullName.trim(),
+        mobile: cleanMobile,
+        location: signUpForm.location.trim(),
+        language,
+        role: authRole,
       },
-      onError: (err) => {
-        setAuthServerErr(err.message || "Invalid credentials. Please try again.");
+      {
+        onSuccess: (res) => {
+          if (res.user) {
+            const profile: FarmerProfile = {
+              id: res.user.id,
+              fullName: res.user.name,
+              mobile: res.user.mobile,
+              location: res.user.location,
+              language,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            };
+            applyFarmer(profile, authRole);
+            setAuthOpen(false);
+            openRoleDashboard(authRole);
+            toast.success(
+              authRole === "buyer"
+                ? "Buyer account registered & saved to Supabase!"
+                : authRole === "admin"
+                ? "Admin account opened!"
+                : "Farmer profile registered & saved to Supabase!"
+            );
+          }
+        },
+        onError: (err) => {
+          setAuthServerErr(err.message || "Failed to create account. Please check your details.");
+        },
       }
-    });
+    );
+  };
+
+  const handleLoginSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    setAuthServerErr(null);
+    const cleanMobile = loginEmailOrPhone.replace(/\D/g, "").slice(-10);
+    if (!cleanMobile || !/^\d{10}$/.test(cleanMobile)) {
+      setFormErrors({ login: "Please enter a valid 10-digit mobile number." });
+      return;
+    }
+
+    farmerLookup.mutate(
+      { mobile: cleanMobile },
+      {
+        onSuccess: (found) => {
+          if (found) {
+            authAuthenticate.mutate(
+              {
+                fullName: found.fullName,
+                mobile: cleanMobile,
+                location: found.location,
+                language: (found.language as LanguageKey) || language,
+                role: ((found as any).accountRole as any) || authRole,
+              },
+              {
+                onSuccess: (res) => {
+                  if (res.user) {
+                    const profile: FarmerProfile = {
+                      id: res.user.id,
+                      fullName: res.user.name,
+                      mobile: res.user.mobile,
+                      location: res.user.location,
+                      language: (res.user.language as LanguageKey) || language,
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                    };
+                    applyFarmer(profile, (res.user.role as any) || authRole);
+                    setAuthOpen(false);
+                    openRoleDashboard((res.user.role as any) || authRole);
+                    toast.success(`Welcome back, ${res.user.name}!`);
+                  }
+                },
+                onError: (err) => {
+                  setAuthServerErr(err.message || "Failed to sign in.");
+                },
+              }
+            );
+          } else {
+            // New user: prefill phone into signup and switch tabs
+            setSignUpForm((prev) => ({ ...prev, mobile: cleanMobile }));
+            setAuthTab("signup");
+            toast.message("New mobile number. Please complete your name & location to register.");
+          }
+        },
+        onError: () => {
+          setSignUpForm((prev) => ({ ...prev, mobile: cleanMobile }));
+          setAuthTab("signup");
+        },
+      }
+    );
   };
 
   const savePreferences = () => {
     if (!farmer) return;
-    farmerSave.mutate({ mobile: farmer.mobile, fullName: farmer.fullName.trim(), location: farmer.location.trim(), language }, {
-      onSuccess: (saved) => {
-        if (saved) applyFarmer(saved);
-        toast.success(t.preferencesSaved);
+    farmerSave.mutate(
+      {
+        mobile: farmer.mobile,
+        fullName: farmer.fullName.trim(),
+        location: farmer.location.trim(),
+        language,
       },
-      onError: () => toast.error("We could not save your preferences. Please try again."),
-    });
+      {
+        onSuccess: (saved) => {
+          if (saved) applyFarmer(saved);
+          toast.success(t.preferencesSaved);
+        },
+        onError: () => toast.error("We could not save your preferences. Please try again."),
+      }
+    );
   };
 
   const logoutFarmer = () => {
@@ -841,9 +887,8 @@ export default function Home() {
     localStorage.removeItem("agrimarket-farmer-profile");
     localStorage.removeItem("agrimarket-active-role");
     setFarmer(null);
-    setSignUpForm({ fullName: "", email: "", password: "", confirmPassword: "", location: "", mobile: "", buyerType: "Retailer" });
+    setSignUpForm({ fullName: "", mobile: "", location: "Guntur, Andhra Pradesh" });
     setLoginEmailOrPhone("");
-    setLoginPassword("");
     setFormErrors({});
     setAuthServerErr(null);
     setMenuOpen(false);
@@ -906,7 +951,7 @@ export default function Home() {
             <button className="auth-close" onClick={() => setAuthOpen(false)} aria-label={t.close}><X size={19} /></button>
             <div className="section-kicker">CropCast Portal</div>
             <h2>{authTab === "signup" ? "Create an Account" : "Sign In to CropCast"}</h2>
-            <p>{authTab === "signup" ? "Join our verified agricultural network to trade produce directly." : "Enter your credentials to access your account and trading dashboard."}</p>
+            <p>{authTab === "signup" ? "Join our verified agricultural network to trade produce directly." : "Enter your mobile number to access your account and trading dashboard."}</p>
 
             <div className="auth-tabs">
               <button
@@ -927,7 +972,6 @@ export default function Home() {
                   setAuthTab("signup");
                   setFormErrors({});
                   setAuthServerErr(null);
-                  if (authRole === "admin" as any) setAuthRole("farmer");
                 }}
                 type="button"
               >
@@ -938,13 +982,13 @@ export default function Home() {
 
             <div className="auth-role-select">
               <span className="auth-role-label">Choose Account Type:</span>
-              <div className="auth-role-cards-2">
+              <div className="auth-role-cards" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
                 <button
                   type="button"
                   className={`auth-role-card ${authRole === "farmer" ? "is-selected" : ""}`}
                   onClick={() => setAuthRole("farmer")}
                 >
-                  <div className="auth-role-icon"><Sprout size={18} /></div>
+                  <div className="auth-role-icon" style={{ fontSize: 20 }}>👨‍🌾</div>
                   <div className="auth-role-name">Farmer / Seller</div>
                   <div className="auth-role-sub">Sell crops & view mandi rates</div>
                 </button>
@@ -953,9 +997,18 @@ export default function Home() {
                   className={`auth-role-card ${authRole === "buyer" ? "is-selected" : ""}`}
                   onClick={() => setAuthRole("buyer")}
                 >
-                  <div className="auth-role-icon"><ShoppingBasket size={18} /></div>
+                  <div className="auth-role-icon" style={{ fontSize: 20 }}>🧺</div>
                   <div className="auth-role-name">Buyer / Trader</div>
                   <div className="auth-role-sub">Source produce & order direct</div>
+                </button>
+                <button
+                  type="button"
+                  className={`auth-role-card ${authRole === "admin" ? "is-selected" : ""}`}
+                  onClick={() => setAuthRole("admin")}
+                >
+                  <div className="auth-role-icon" style={{ fontSize: 20 }}>⚙️</div>
+                  <div className="auth-role-name">Admin Portal</div>
+                  <div className="auth-role-sub">System & logistics overview</div>
                 </button>
               </div>
             </div>
@@ -970,11 +1023,14 @@ export default function Home() {
             {authTab === "login" ? (
               <form onSubmit={handleLoginSubmit} className="auth-form-grid" noValidate>
                 <div className="auth-field">
-                  <label htmlFor="login-identity">Email Address or Mobile Number</label>
+                  <label htmlFor="login-identity">10-Digit Mobile Number</label>
                   <input
                     id="login-identity"
                     value={loginEmailOrPhone}
-                    placeholder="name@example.com or 10-digit mobile"
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={14}
+                    placeholder="Enter 10-digit mobile (e.g. 9876543210)"
                     onChange={(e) => {
                       setLoginEmailOrPhone(e.target.value);
                       if (formErrors.login) setFormErrors((prev) => ({ ...prev, login: "" }));
@@ -985,28 +1041,14 @@ export default function Home() {
                   {formErrors.login && <span className="auth-inline-error">{formErrors.login}</span>}
                 </div>
 
-                <div className="auth-field">
-                  <label htmlFor="login-password">Password</label>
-                  <input
-                    id="login-password"
-                    type="password"
-                    value={loginPassword}
-                    placeholder="Enter your password"
-                    onChange={(e) => {
-                      setLoginPassword(e.target.value);
-                      if (formErrors.password) setFormErrors((prev) => ({ ...prev, password: "" }));
-                      if (authServerErr) setAuthServerErr(null);
-                    }}
-                  />
-                  {formErrors.password && <span className="auth-inline-error">{formErrors.password}</span>}
-                </div>
-
                 <button
                   type="submit"
                   className="auth-submit-btn"
-                  disabled={authLogin.isPending}
+                  disabled={authAuthenticate.isPending || farmerLookup.isPending}
                 >
-                  {authLogin.isPending ? "Signing in…" : `Sign In as ${authRole === "farmer" ? "Farmer" : "Buyer"}`}
+                  {authAuthenticate.isPending || farmerLookup.isPending
+                    ? "Signing in…"
+                    : `Continue as ${authRole === "farmer" ? "Farmer" : authRole === "buyer" ? "Buyer" : "Admin"}`}
                   <ArrowRight size={17} />
                 </button>
                 <button
@@ -1018,13 +1060,15 @@ export default function Home() {
                     setAuthTab("signup");
                   }}
                 >
-                  New to CropCast? Create a {authRole === "buyer" ? "buyer" : "farmer"} account →
+                  New to CropCast? Create a {authRole === "buyer" ? "buyer" : authRole === "admin" ? "admin" : "farmer"} account →
                 </button>
               </form>
             ) : (
               <form onSubmit={handleSignUpSubmit} className="auth-form-grid" noValidate>
                 <div className="auth-field">
-                  <label htmlFor="signup-name">{authRole === "buyer" ? "Business / Buyer Full Name" : "Full Name"}</label>
+                  <label htmlFor="signup-name">
+                    {authRole === "buyer" ? "Business / Buyer Name" : authRole === "admin" ? "Admin Name" : "Full Name"}
+                  </label>
                   <input
                     id="signup-name"
                     value={signUpForm.fullName}
@@ -1040,85 +1084,48 @@ export default function Home() {
                 </div>
 
                 <div className="auth-field">
-                  <label htmlFor="signup-email">Email Address</label>
+                  <label htmlFor="signup-phone">10-Digit Mobile Number</label>
                   <input
-                    id="signup-email"
-                    type="email"
-                    value={signUpForm.email}
-                    placeholder="farmer@example.com"
+                    id="signup-phone"
+                    value={signUpForm.mobile}
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={14}
+                    placeholder="e.g. 9876543210"
                     onChange={(e) => {
-                      setSignUpForm((prev) => ({ ...prev, email: e.target.value }));
-                      if (formErrors.email) setFormErrors((prev) => ({ ...prev, email: "" }));
+                      setSignUpForm((prev) => ({ ...prev, mobile: e.target.value }));
+                      if (formErrors.mobile) setFormErrors((prev) => ({ ...prev, mobile: "" }));
                       if (authServerErr) setAuthServerErr(null);
                     }}
                   />
-                  {formErrors.email && <span className="auth-inline-error">{formErrors.email}</span>}
+                  {formErrors.mobile && <span className="auth-inline-error">{formErrors.mobile}</span>}
                 </div>
 
-                <div className="auth-form-row">
-                  <div className="auth-field">
-                    <label htmlFor="signup-password">Password</label>
-                    <input
-                      id="signup-password"
-                      type="password"
-                      value={signUpForm.password}
-                      placeholder="Min 6 characters"
-                      onChange={(e) => {
-                        setSignUpForm((prev) => ({ ...prev, password: e.target.value }));
-                        if (formErrors.password) setFormErrors((prev) => ({ ...prev, password: "" }));
-                        if (authServerErr) setAuthServerErr(null);
-                      }}
-                    />
-                    {formErrors.password && <span className="auth-inline-error">{formErrors.password}</span>}
-                  </div>
-
-                  <div className="auth-field">
-                    <label htmlFor="signup-confirm-password">Confirm Password</label>
-                    <input
-                      id="signup-confirm-password"
-                      type="password"
-                      value={signUpForm.confirmPassword}
-                      placeholder="Re-enter password"
-                      onChange={(e) => {
-                        setSignUpForm((prev) => ({ ...prev, confirmPassword: e.target.value }));
-                        if (formErrors.confirmPassword) setFormErrors((prev) => ({ ...prev, confirmPassword: "" }));
-                        if (authServerErr) setAuthServerErr(null);
-                      }}
-                    />
-                    {formErrors.confirmPassword && <span className="auth-inline-error">{formErrors.confirmPassword}</span>}
-                  </div>
-                </div>
-
-                <div className="auth-form-row">
-                  <div className="auth-field">
-                    <label htmlFor="signup-location">{authRole === "buyer" ? "Delivery City / Hub (Optional)" : "Farm / Mandi Location (Optional)"}</label>
-                    <input
-                      id="signup-location"
-                      value={signUpForm.location}
-                      placeholder={authRole === "buyer" ? "Vijayawada, AP" : "Tenali, Guntur, AP"}
-                      onChange={(e) => setSignUpForm((prev) => ({ ...prev, location: e.target.value }))}
-                    />
-                  </div>
-
-                  <div className="auth-field">
-                    <label htmlFor="signup-phone">Mobile Phone (Optional)</label>
-                    <input
-                      id="signup-phone"
-                      value={signUpForm.mobile}
-                      inputMode="numeric"
-                      maxLength={14}
-                      placeholder="+91 98765 43210"
-                      onChange={(e) => setSignUpForm((prev) => ({ ...prev, mobile: e.target.value }))}
-                    />
-                  </div>
+                <div className="auth-field">
+                  <label htmlFor="signup-location">
+                    {authRole === "buyer" ? "Delivery City / Hub (South India)" : "Farm / Mandi Location (South India)"}
+                  </label>
+                  <LocationInput
+                    id="signup-location"
+                    value={signUpForm.location}
+                    placeholder="Search South Indian district/city..."
+                    onChange={(loc) => {
+                      setSignUpForm((prev) => ({ ...prev, location: loc }));
+                      if (formErrors.location) setFormErrors((prev) => ({ ...prev, location: "" }));
+                      if (authServerErr) setAuthServerErr(null);
+                    }}
+                  />
+                  {formErrors.location && <span className="auth-inline-error">{formErrors.location}</span>}
                 </div>
 
                 <button
                   type="submit"
                   className="auth-submit-btn"
-                  disabled={authRegister.isPending}
+                  disabled={authAuthenticate.isPending}
                 >
-                  {authRegister.isPending ? "Creating Account…" : `Create ${authRole === "farmer" ? "Farmer" : "Buyer"} Account`}
+                  {authAuthenticate.isPending
+                    ? "Creating Account…"
+                    : `Create ${authRole === "farmer" ? "Farmer" : authRole === "buyer" ? "Buyer" : "Admin"} Account`}
                   <ArrowRight size={17} />
                 </button>
                 <button
@@ -1130,7 +1137,7 @@ export default function Home() {
                     setAuthTab("login");
                   }}
                 >
-                  Already have an account? Sign In →
+                  Already registered? Sign In with Mobile →
                 </button>
               </form>
             )}
@@ -1247,7 +1254,7 @@ export default function Home() {
                   else openAuthModal("signup", "farmer");
                 }}
               >
-                <span><Sprout size={32} /></span>
+                <span style={{ fontSize: 38, display: "grid", placeItems: "center", minWidth: 48, minHeight: 48 }}>👨‍🌾</span>
                 <b>Seller Portal</b>
                 <small>Farmers & FPOs · List produce & monitor mandi rates</small>
               </button>
@@ -1258,7 +1265,7 @@ export default function Home() {
                   else openAuthModal("signup", "buyer");
                 }}
               >
-                <span><ShoppingBasket size={32} /></span>
+                <span style={{ fontSize: 38, display: "grid", placeItems: "center", minWidth: 48, minHeight: 48 }}>🧺</span>
                 <b>Buyer Portal</b>
                 <small>Businesses, Traders & Buyers · Source verified farm produce</small>
               </button>
