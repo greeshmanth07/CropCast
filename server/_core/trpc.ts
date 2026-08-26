@@ -1,0 +1,44 @@
+import { initTRPC, TRPCError } from "@trpc/server";
+import superjson from "superjson";
+import type { Request, Response } from "express";
+import { NOT_ADMIN_ERR_MSG, UNAUTHED_ERR_MSG } from "@shared/const";
+
+export interface Context {
+  req: Request;
+  res: Response;
+  user: any;
+}
+
+const t = initTRPC.context<Context>().create({
+  transformer: superjson,
+});
+
+export const router = t.router;
+export const publicProcedure = t.procedure;
+export const requireUser = t.middleware(async (opts) => {
+  const { ctx, next } = opts;
+  if (!ctx.user) {
+    throw new TRPCError({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
+  }
+  return next({
+    ctx: {
+      ...ctx,
+      user: ctx.user,
+    },
+  });
+});
+export const protectedProcedure = t.procedure.use(requireUser);
+export const adminProcedure = t.procedure.use(
+  t.middleware(async (opts) => {
+    const { ctx, next } = opts;
+    if (!ctx.user || ctx.user.role !== "admin") {
+      throw new TRPCError({ code: "FORBIDDEN", message: NOT_ADMIN_ERR_MSG });
+    }
+    return next({
+      ctx: {
+        ...ctx,
+        user: ctx.user,
+      },
+    });
+  })
+);

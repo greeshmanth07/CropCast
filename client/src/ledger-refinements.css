@@ -1,0 +1,27 @@
+/**
+ * FIELD LEDGER REFINEMENTS
+ * Market-slip paper texture, repeated ruled-line motifs, and tactile ink-stamp crop selectors.
+ */
+
+.hero-copy > p { margin-bottom: 20px; }
+.hero-market-slip { position: relative; display: grid; grid-template-columns: auto auto auto 18px minmax(148px, 1fr); align-items: center; width: min(100%, 620px); margin: 0 0 17px; overflow: hidden; border: 1px solid #bcd7c3; border-radius: 3px 9px 9px 3px; padding: 16px 17px 14px; background: repeating-linear-gradient(0deg, #f8fcf8 0 28px, #e5f1e7 29px 30px); color: #224130; text-align: left; box-shadow: 6px 7px 0 #e1efe4; transition: transform 160ms cubic-bezier(.23,1,.32,1), box-shadow 160ms; }
+.hero-market-slip:hover { transform: translate(-2px,-2px); box-shadow: 9px 10px 0 #d4e7d9; }
+.hero-market-slip:active { transform: scale(.98); }
+.slip-pin { position: absolute; top: 0; left: 0; border-radius: 0 0 5px 0; padding: 4px 9px; background: #1f6b45; color: #fff; font-size: 9px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.slip-crop { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; color: #37644a; font-size: 12px; font-weight: 700; }
+.slip-crop svg { color: #bd4c45; }
+.hero-market-slip > strong { margin: 8px 0 0 12px; font-size: 20px; letter-spacing: -.05em; }
+.hero-market-slip > strong small { display: block; margin-top: 2px; color: #728477; font-size: 9px; font-weight: 700; letter-spacing: 0; }
+.slip-arrow { margin: 9px 7px 0; color: #4d9163; font-size: 21px; }
+.hero-market-slip > div { display: flex; flex-direction: column; gap: 1px; margin-top: 8px; border-left: 1px dashed #aac8b1; padding-left: 12px; }
+.hero-market-slip b { color: #1f6b45; font-size: 13px; }.hero-market-slip em { color: #263c2e; font-size: 12px; font-style: normal; font-weight: 700; }.hero-market-slip i { margin-top: 2px; color: #6a7d70; font-size: 10px; font-style: normal; }
+
+.crop-section { position: relative; }.crop-section::before, .crop-section::after { content: ""; position: absolute; width: 66px; height: 1px; background: #5d9971; }.crop-section::before { top: 39px; left: 32px; }.crop-section::after { right: 32px; bottom: 44px; box-shadow: -11px -7px 0 -0.2px #a6c7b0, -22px -14px 0 -0.2px #d1e3d6; }
+.crop-stamp { position: relative; border-radius: 5px; padding: 17px 7px 14px; }.crop-stamp::before { content: ""; position: absolute; top: 5px; width: 49px; border-top: 1px solid transparent; transition: border-color 160ms; }.crop-stamp:hover { background: #f1f8f2; transform: translateY(-3px); box-shadow: 0 9px 14px rgba(31,107,69,.06); }.crop-stamp:hover::before { border-color: #79a889; }
+.crop-ink { position: relative; display: grid; width: 88px; height: 88px; place-items: center; overflow: hidden; border: 1px solid #b9d7c2; border-radius: 50%; background: #f7fbf8; box-shadow: inset 0 0 0 6px #e8f4eb, 2px 3px 0 #dcecdf; color: #276f47; }.crop-ink::before { content: ""; position: absolute; inset: 11px; border: 1px dashed #aacbb4; border-radius: 50%; }.crop-ink svg { position: relative; z-index: 1; width: 35px; height: 35px; stroke-width: 1.55; }.crop-ink i { position: absolute; bottom: 17px; width: 33px; border-top: 1px solid currentColor; opacity: .6; }.crop-ink-tomato { color: #b94943; }.crop-ink-tomato i { border-color: #287047; transform: rotate(-17deg); transform-origin: left; }.crop-ink-onion { color: #a16f33; }.crop-ink-potato { color: #8c6843; }.crop-ink-chilli { color: #a9473b; }.crop-ink-chilli i { display: none; }.crop-ink-maize { color: #8c8030; }.crop-ink-turmeric { color: #a37d20; }.crop-ink-cotton { color: #48765a; }
+
+.help-section { background: repeating-linear-gradient(0deg, #f5faf6 0 55px, #eff7f1 56px 57px); }.help-intro img { border: 4px solid #fff; border-radius: 3px; box-shadow: 5px 6px 0 #dcecdf; }
+
+@media (max-width: 850px) { .hero-market-slip { width: min(100%, 620px); }.crop-section::before { left: 22px; }.crop-section::after { right: 22px; } }
+@media (max-width: 580px) { .hero-market-slip { grid-template-columns: auto 1fr; gap: 0 10px; padding: 17px 14px 14px; }.slip-crop { margin-top: 11px; }.hero-market-slip > strong { margin: 8px 0 0; }.slip-arrow { display: none; }.hero-market-slip > div { grid-column: 1 / -1; margin-top: 12px; margin-left: 0; padding-left: 9px; }.crop-ink { width: 73px; height: 73px; }.crop-ink svg { width: 29px; height: 29px; }.crop-ink::before { inset: 9px; }.crop-ink i { bottom: 13px; } }
+

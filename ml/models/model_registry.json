@@ -1,0 +1,371 @@
+{
+  "version": "1.0.0",
+  "algorithm": "XGBoost Regressor (7-Horizon Direct Multi-Output)",
+  "features": [
+    "source_average_price",
+    "source_min_price",
+    "source_max_price",
+    "source_price_spread",
+    "source_price_volatility",
+    "source_count",
+    "price_lag_1",
+    "price_lag_2",
+    "price_lag_3",
+    "price_lag_7",
+    "price_lag_14",
+    "price_lag_21",
+    "price_lag_30",
+    "rolling_mean_7",
+    "rolling_mean_14",
+    "rolling_mean_30",
+    "rolling_std_7",
+    "rolling_std_14",
+    "price_change_1d",
+    "price_change_3d",
+    "price_change_7d",
+    "price_change_14d",
+    "arrivals_lag_1",
+    "arrivals_rolling_mean_7",
+    "arrivals_change_7d",
+    "rainfall_lag_1",
+    "rainfall_7d_sum",
+    "temp_max_c",
+    "temp_min_c",
+    "temp_spread",
+    "humidity_pct",
+    "day_of_week",
+    "month",
+    "day_of_year_sin",
+    "day_of_year_cos"
+  ],
+  "models": {
+    "Tomato": {
+      "crop": "Tomato",
+      "primary_market": "Guntur",
+      "horizons": {
+        "h1": {
+          "file": "xgb_tomato_h1.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h2": {
+          "file": "xgb_tomato_h2.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h3": {
+          "file": "xgb_tomato_h3.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h4": {
+          "file": "xgb_tomato_h4.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h5": {
+          "file": "xgb_tomato_h5.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h6": {
+          "file": "xgb_tomato_h6.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h7": {
+          "file": "xgb_tomato_h7.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        }
+      }
+    },
+    "Rice": {
+      "crop": "Rice",
+      "primary_market": "Guntur",
+      "horizons": {
+        "h1": {
+          "file": "xgb_rice_h1.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h2": {
+          "file": "xgb_rice_h2.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h3": {
+          "file": "xgb_rice_h3.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h4": {
+          "file": "xgb_rice_h4.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h5": {
+          "file": "xgb_rice_h5.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h6": {
+          "file": "xgb_rice_h6.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h7": {
+          "file": "xgb_rice_h7.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        }
+      }
+    },
+    "Maize": {
+      "crop": "Maize",
+      "primary_market": "Narasaraopet",
+      "horizons": {
+        "h1": {
+          "file": "xgb_maize_h1.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h2": {
+          "file": "xgb_maize_h2.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h3": {
+          "file": "xgb_maize_h3.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h4": {
+          "file": "xgb_maize_h4.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h5": {
+          "file": "xgb_maize_h5.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h6": {
+          "file": "xgb_maize_h6.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h7": {
+          "file": "xgb_maize_h7.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        }
+      }
+    },
+    "Chilli": {
+      "crop": "Chilli",
+      "primary_market": "Guntur",
+      "horizons": {
+        "h1": {
+          "file": "xgb_chilli_h1.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h2": {
+          "file": "xgb_chilli_h2.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h3": {
+          "file": "xgb_chilli_h3.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h4": {
+          "file": "xgb_chilli_h4.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h5": {
+          "file": "xgb_chilli_h5.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h6": {
+          "file": "xgb_chilli_h6.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h7": {
+          "file": "xgb_chilli_h7.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        }
+      }
+    },
+    "Onion": {
+      "crop": "Onion",
+      "primary_market": "Kurnool",
+      "horizons": {
+        "h1": {
+          "file": "xgb_onion_h1.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h2": {
+          "file": "xgb_onion_h2.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h3": {
+          "file": "xgb_onion_h3.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h4": {
+          "file": "xgb_onion_h4.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h5": {
+          "file": "xgb_onion_h5.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h6": {
+          "file": "xgb_onion_h6.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h7": {
+          "file": "xgb_onion_h7.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        }
+      }
+    },
+    "Potato": {
+      "crop": "Potato",
+      "primary_market": "Vijayawada",
+      "horizons": {
+        "h1": {
+          "file": "xgb_potato_h1.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h2": {
+          "file": "xgb_potato_h2.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h3": {
+          "file": "xgb_potato_h3.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h4": {
+          "file": "xgb_potato_h4.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h5": {
+          "file": "xgb_potato_h5.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h6": {
+          "file": "xgb_potato_h6.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h7": {
+          "file": "xgb_potato_h7.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        }
+      }
+    },
+    "Cotton": {
+      "crop": "Cotton",
+      "primary_market": "Adoni",
+      "horizons": {
+        "h1": {
+          "file": "xgb_cotton_h1.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h2": {
+          "file": "xgb_cotton_h2.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h3": {
+          "file": "xgb_cotton_h3.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h4": {
+          "file": "xgb_cotton_h4.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h5": {
+          "file": "xgb_cotton_h5.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h6": {
+          "file": "xgb_cotton_h6.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h7": {
+          "file": "xgb_cotton_h7.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        }
+      }
+    },
+    "Turmeric": {
+      "crop": "Turmeric",
+      "primary_market": "Duggirala",
+      "horizons": {
+        "h1": {
+          "file": "xgb_turmeric_h1.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h2": {
+          "file": "xgb_turmeric_h2.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h3": {
+          "file": "xgb_turmeric_h3.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h4": {
+          "file": "xgb_turmeric_h4.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h5": {
+          "file": "xgb_turmeric_h5.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h6": {
+          "file": "xgb_turmeric_h6.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        },
+        "h7": {
+          "file": "xgb_turmeric_h7.json",
+          "feature_count": 35,
+          "samples_trained": 113
+        }
+      }
+    }
+  }
+}

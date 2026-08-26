@@ -1,0 +1,110 @@
+{
+  "crop": "Tomato",
+  "market": "Guntur",
+  "validation_strategy": "chronological_walk_forward_backtest",
+  "overall_model_mae": 309.52,
+  "overall_baseline_mae": 212.32,
+  "overall_mae_improvement_pct": -45.78,
+  "metrics_by_horizon": {
+    "Day_1": {
+      "horizon_days": 1,
+      "evaluation_samples": 73,
+      "xgb_mae": 157.59,
+      "xgb_rmse": 199.41,
+      "xgb_mape_percent": 5.47,
+      "baseline_persistence_mae": 104.81,
+      "baseline_persistence_rmse": 129.68,
+      "baseline_persistence_mape": 3.68,
+      "mae_improvement_vs_baseline_pct": -50.36,
+      "directional_accuracy_pct": 52.05,
+      "residual_std": 199.09
+    },
+    "Day_2": {
+      "horizon_days": 2,
+      "evaluation_samples": 73,
+      "xgb_mae": 213.07,
+      "xgb_rmse": 268.88,
+      "xgb_mape_percent": 7.59,
+      "baseline_persistence_mae": 150.57,
+      "baseline_persistence_rmse": 186.03,
+      "baseline_persistence_mape": 5.21,
+      "mae_improvement_vs_baseline_pct": -41.5,
+      "directional_accuracy_pct": 49.32,
+      "residual_std": 257.96
+    },
+    "Day_3": {
+      "horizon_days": 3,
+      "evaluation_samples": 73,
+      "xgb_mae": 255.96,
+      "xgb_rmse": 304.55,
+      "xgb_mape_percent": 9.21,
+      "baseline_persistence_mae": 185.56,
+      "baseline_persistence_rmse": 223.42,
+      "baseline_persistence_mape": 6.45,
+      "mae_improvement_vs_baseline_pct": -37.94,
+      "directional_accuracy_pct": 45.21,
+      "residual_std": 282.35
+    },
+    "Day_4": {
+      "horizon_days": 4,
+      "evaluation_samples": 73,
+      "xgb_mae": 327.73,
+      "xgb_rmse": 382.14,
+      "xgb_mape_percent": 11.53,
+      "baseline_persistence_mae": 206.83,
+      "baseline_persistence_rmse": 259.34,
+      "baseline_persistence_mape": 7.2,
+      "mae_improvement_vs_baseline_pct": -58.45,
+      "directional_accuracy_pct": 39.73,
+      "residual_std": 363.16
+    },
+    "Day_5": {
+      "horizon_days": 5,
+      "evaluation_samples": 73,
+      "xgb_mae": 379.35,
+      "xgb_rmse": 452.08,
+      "xgb_mape_percent": 13.5,
+      "baseline_persistence_mae": 243.92,
+      "baseline_persistence_rmse": 290.34,
+      "baseline_persistence_mape": 8.6,
+      "mae_improvement_vs_baseline_pct": -55.52,
+      "directional_accuracy_pct": 50.68,
+      "residual_std": 428.79
+    },
+    "Day_6": {
+      "horizon_days": 6,
+      "evaluation_samples": 73,
+      "xgb_mae": 403.77,
+      "xgb_rmse": 480.21,
+      "xgb_mape_percent": 14.56,
+      "baseline_persistence_mae": 279.66,
+      "baseline_persistence_rmse": 327.37,
+      "baseline_persistence_mape": 9.86,
+      "mae_improvement_vs_baseline_pct": -44.38,
+      "directional_accuracy_pct": 56.16,
+      "residual_std": 450.25
+    },
+    "Day_7": {
+      "horizon_days": 7,
+      "evaluation_samples": 73,
+      "xgb_mae": 429.16,
+      "xgb_rmse": 501.15,
+      "xgb_mape_percent": 15.7,
+      "baseline_persistence_mae": 314.88,
+      "baseline_persistence_rmse": 363.44,
+      "baseline_persistence_mape": 11.16,
+      "mae_improvement_vs_baseline_pct": -36.29,
+      "directional_accuracy_pct": 42.47,
+      "residual_std": 462.41
+    }
+  },
+  "residual_stds": {
+    "h1": 199.08680408089546,
+    "h2": 257.9552439106297,
+    "h3": 282.34852680855084,
+    "h4": 363.15712728580087,
+    "h5": 428.78993088030717,
+    "h6": 450.2478099774288,
+    "h7": 462.41195159362604
+  }
+}
