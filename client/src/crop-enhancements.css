@@ -405,6 +405,111 @@ button.market-row { width: 100%; border: 0; border-bottom: 1px solid #dce8df; ba
 }
 
 /* ==========================================================================
+   ELEGANT TOAST NOTIFICATION CARD (MOBILE & DESKTOP)
+   ========================================================================== */
+
+.toaster [data-sonner-toast] {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 13px 44px 13px 18px !important;
+  border-radius: 12px !important;
+  font-family: "Noto Sans", sans-serif !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 14px 34px rgba(18, 56, 32, 0.16) !important;
+  border: 1px solid #c7dfd0 !important;
+  background: #ffffff !important;
+  color: #17291e !important;
+}
+
+.toaster [data-sonner-toast][data-type="success"] {
+  border-left: 5px solid #1f6b45 !important;
+}
+
+.toaster [data-sonner-toast][data-type="error"] {
+  border-left: 5px solid #dc2626 !important;
+}
+
+.toaster [data-sonner-toast][data-type="info"] {
+  border-left: 5px solid #2563eb !important;
+}
+
+/* Explicit X Close Button on Toast Card */
+.toaster [data-close-button],
+.cropcast-toast-close {
+  display: grid !important;
+  place-items: center !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50% !important;
+  border: 1px solid #d2e4d7 !important;
+  background: #f0f6f2 !important;
+  color: #385643 !important;
+  cursor: pointer !important;
+  transition: all 140ms ease !important;
+  opacity: 0.95 !important;
+  flex-shrink: 0 !important;
+  position: absolute !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  right: 12px !important;
+  left: auto !important;
+}
+
+.toaster [data-close-button]:hover,
+.cropcast-toast-close:hover {
+  background: #e1efe5 !important;
+  color: #1f6b45 !important;
+  opacity: 1 !important;
+  transform: translateY(-50%) scale(1.08) !important;
+}
+
+.toaster [data-close-button] svg {
+  width: 12px !important;
+  height: 12px !important;
+}
+
+/* Dark Theme Toast Styling */
+.dark .toaster [data-sonner-toast] {
+  background: #14281e !important;
+  border-color: #274533 !important;
+  color: #eaf4ed !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65) !important;
+}
+
+.dark .toaster [data-sonner-toast][data-type="success"] {
+  border-left-color: #22c55e !important;
+}
+
+.dark .toaster [data-sonner-toast][data-type="error"] {
+  border-left-color: #ef4444 !important;
+}
+
+.dark .toaster [data-close-button],
+.dark .cropcast-toast-close {
+  background: #1d3629 !important;
+  border-color: #2e533c !important;
+  color: #a3cbb2 !important;
+}
+
+.dark .toaster [data-close-button]:hover,
+.dark .cropcast-toast-close:hover {
+  background: #254736 !important;
+  color: #4ade80 !important;
+}
+
+@media (max-width: 580px) {
+  .toaster [data-sonner-toast] {
+    width: min(calc(100vw - 24px), 370px) !important;
+    margin: 8px auto !important;
+    padding: 12px 42px 12px 14px !important;
+    font-size: 13px !important;
+  }
+}
+
+/* ==========================================================================
    COMPREHENSIVE DARK THEME REFINEMENT
    ========================================================================== */
 
