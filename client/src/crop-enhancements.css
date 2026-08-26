@@ -50,6 +50,33 @@ button.market-row { width: 100%; border: 0; border-bottom: 1px solid #dce8df; ba
   .auth-submit-btn, .login-submit { padding: 12px 16px; font-size: 14.5px; }
 }
 
+/* Desktop & default: Single horizontal scrollable row */
+.crop-stamps {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  gap: 14px !important;
+  overflow-x: auto !important;
+  padding: 4px 4px 12px !important;
+  scrollbar-width: thin;
+  scrollbar-color: #b8d5c0 transparent;
+  scroll-snap-type: x proximity;
+  touch-action: pan-x;
+  user-select: none;
+}
+.crop-stamps::-webkit-scrollbar {
+  height: 7px;
+}
+.crop-stamps::-webkit-scrollbar-thumb {
+  border-radius: 7px;
+  background: #b8d5c0;
+}
+.crop-stamp {
+  flex: 0 0 156px !important;
+  width: 156px !important;
+  scroll-snap-align: start;
+}
+
 @media (max-width: 580px) {
   .crop-stamps {
     display: grid !important;
@@ -66,6 +93,7 @@ button.market-row { width: 100%; border: 0; border-bottom: 1px solid #dce8df; ba
     justify-content: center !important;
     min-height: 116px !important;
     width: 100% !important;
+    flex: 1 1 auto !important;
     padding: 14px 8px 12px !important;
     border: 1px solid #d4e4d8 !important;
     border-radius: 10px !important;
